@@ -9,7 +9,7 @@
 Para utilizar NebulaUI en tu script, podés cargarla de forma remota utilizando el siguiente enlace. Reemplazá `TU_USUARIO` con tu nombre de usuario de GitHub:
 
 ```lua
-local NebulaUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/TU_USUARIO/nebula-ui/main/library.lua"))()
+local NebulaUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/lozanobrian669/nebula-ui/main/library.lua"))()
 ```
 
 ---
