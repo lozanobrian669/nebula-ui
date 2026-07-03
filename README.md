@@ -6,10 +6,10 @@
 
 ## 🚀 Instalación y Carga
 
-Para utilizar NebulaUI en tu script, podés cargarla de forma remota utilizando el siguiente enlace. Reemplazá `TU_USUARIO` con tu nombre de usuario de GitHub:
+Para utilizar NebulaUI en tu script, podés cargarla de forma remota utilizando el siguiente enlace:
 
 ```lua
-local NebulaUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/lozanobrian669/nebula-ui/main/library.lua"))()
+local NebulaUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/lozanobrian669/nebula-ui/refs/heads/main/library.lua"))()
 ```
 
 ---
@@ -19,7 +19,7 @@ local NebulaUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/loza
 Plantilla mínima para iniciar un script utilizando NebulaUI:
 
 ```lua
-local NebulaUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/TU_USUARIO/nebula-ui/main/library.lua"))()
+local NebulaUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/lozanobrian669/nebula-ui/refs/heads/main/library.lua"))()
 NebulaUI:DestroyAll() -- Evita interfaces duplicadas al re-ejecutar
 
 local Window = NebulaUI.CreateWindow({
@@ -48,7 +48,7 @@ Crea e inicializa la ventana de la interfaz.
 | Parámetro | Tipo | Default | Descripción |
 |---|---|---|---|
 | `Title` | `string` | `"NebulaUI"` | Título principal en la cabecera. |
-| `SubTitle` | `string` | `"by NebulaUI"` | Subtítulo decorativo en la cabecera. |
+| `SubTitle` | `string` | `"by Antigravity"` | Subtítulo decorativo en la cabecera. |
 | `ConfigSaving` | `table` | `{ Enabled = false }` | Opciones de guardado automático (ver sección de Config). |
 
 ```lua
