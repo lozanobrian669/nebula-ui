@@ -1,6 +1,6 @@
 # 🌌 NebulaUI
 
-**Librería de interfaz de usuario premium para Roblox** — Diseño oscuro futurista, totalmente responsiva en dispositivos móviles y PC, con soporte para temas dinámicos en tiempo real y guardado de configuración automático.
+**Librería de interfaz de usuario premium para Roblox**. Diseño oscuro futurista, totalmente responsiva en dispositivos móviles y PC, con soporte para temas dinámicos en tiempo real y guardado de configuración automático.
 
 ---
 
@@ -48,7 +48,7 @@ Crea e inicializa la ventana de la interfaz.
 | Parámetro | Tipo | Default | Descripción |
 |---|---|---|---|
 | `Title` | `string` | `"NebulaUI"` | Título principal en la cabecera. |
-| `SubTitle` | `string` | `"by Antigravity"` | Subtítulo decorativo en la cabecera. |
+| `SubTitle` | `string` | `"by NebulaUI"` | Subtítulo decorativo en la cabecera. |
 | `ConfigSaving` | `table` | `{ Enabled = false }` | Opciones de guardado automático (ver sección de Config). |
 
 ```lua
