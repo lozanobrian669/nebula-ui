@@ -1,4 +1,3 @@
-print("[DEBUG] 1 - Inicio del script")
 local NebulaUI = {
 	Windows = {},
 	Theme = {
@@ -23,7 +22,6 @@ local NebulaUI = {
 	}
 }
 NebulaUI.__index = NebulaUI
-print("[DEBUG] 2 - Tabla NebulaUI creada")
 
 local Window = {}
 Window.__index = Window
@@ -238,7 +236,8 @@ function NebulaUI.CreateWindow(options)
 	toggleBtn.Size = udim2FromOffset(46, 46)
 	
 	-- Posicionamiento inteligente para evitar colisiones si ya hay ventanas activas
-	local offsetMultiplier = #NebulaUI.Windows
+	-- (el módulo evita que el offset crezca sin límite si se abren/cierran muchas ventanas)
+	local offsetMultiplier = #NebulaUI.Windows % 6
 	toggleBtn.Position = UDim2.new(0, 15 + (offsetMultiplier * 15), 0.5, 40 + (offsetMultiplier * 10))
 	toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 21, 26)
 	toggleBtn.Parent = screenGui
@@ -447,10 +446,53 @@ function NebulaUI.CreateWindow(options)
 	separator.BorderSizePixel = 0
 	separator.Parent = header
 	
+	-- Avatar del jugador (visible por defecto; se puede desactivar con options.ShowAvatar = false)
+	local showAvatar = options.ShowAvatar
+	if showAvatar == nil then
+		showAvatar = true
+	end
+	local avatarSize = isMobile and 28 or 32
+	local textLeftOffset = 15
+
+	if showAvatar then
+		local avatarImage = Instance.new("ImageLabel")
+		avatarImage.Name = "Avatar"
+		avatarImage.Size = udim2FromOffset(avatarSize, avatarSize)
+		avatarImage.Position = UDim2.new(0, 12, 0.5, -avatarSize / 2)
+		avatarImage.BackgroundColor3 = NebulaUI.Theme.CardBackground
+		avatarImage.Image = ""
+		avatarImage.Parent = header
+
+		local avatarCorner = Instance.new("UICorner")
+		avatarCorner.CornerRadius = UDim.new(1, 0)
+		avatarCorner.Parent = avatarImage
+
+		local avatarStroke = Instance.new("UIStroke")
+		avatarStroke.Color = NebulaUI.Theme.CardBorder
+		avatarStroke.Thickness = 1
+		avatarStroke.Parent = avatarImage
+
+		self.AvatarImage = avatarImage
+		textLeftOffset = 12 + avatarSize + 10
+
+		NebulaTask.spawn(function()
+			local ok, content = pcall(function()
+				return Players:GetUserThumbnailAsync(
+					LocalPlayer.UserId,
+					Enum.ThumbnailType.HeadShot,
+					Enum.ThumbnailSize.Size100x100
+				)
+			end)
+			if ok then
+				avatarImage.Image = content
+			end
+		end)
+	end
+
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(0.5, 0, 0.5, 0)
-	title.Position = UDim2.new(0, 15, 0, 8)
+	title.Size = UDim2.new(0.5, -textLeftOffset + 15, 0.5, 0)
+	title.Position = UDim2.new(0, textLeftOffset, 0, 8)
 	title.BackgroundTransparency = 1
 	title.Font = Enum.Font.GothamBold
 	title.Text = titleText
@@ -458,11 +500,11 @@ function NebulaUI.CreateWindow(options)
 	title.TextSize = isMobile and 14 or 15
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = header
-	
+
 	local subtitle = Instance.new("TextLabel")
 	subtitle.Name = "Subtitle"
-	subtitle.Size = UDim2.new(0.5, 0, 0.5, 0)
-	subtitle.Position = UDim2.new(0, 15, 0.5, 2)
+	subtitle.Size = UDim2.new(0.5, -textLeftOffset + 15, 0.5, 0)
+	subtitle.Position = UDim2.new(0, textLeftOffset, 0.5, 2)
 	subtitle.BackgroundTransparency = 1
 	subtitle.Font = Enum.Font.GothamSemibold
 	subtitle.Text = subTitleText
