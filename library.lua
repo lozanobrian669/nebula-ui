@@ -748,6 +748,13 @@ function Window:UpdateTheme(accentColor)
 		-- ScrollingFrames
 		elseif obj:IsA("ScrollingFrame") then
 			obj.ScrollBarImageColor3 = accentColor
+			
+		-- Separadores / Títulos
+		elseif name == "TextLabel" then
+			local parent = obj.Parent
+			if parent and parent.Name:find("Separator_") then
+				obj.TextColor3 = accentColor
+			end
 		end
 	end
 end
@@ -1585,11 +1592,6 @@ function Tab:AddParagraph(titleText, contentText)
 	
 	local height = titleBounds.Y + contentBounds.Y + 22
 	local frame = createBase(self, "Paragraph", height)
-	frame.BackgroundTransparency = 1
-	local stroke = frame:FindFirstChildOfClass("UIStroke")
-	if stroke then
-		stroke.Enabled = false
-	end
 	
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Name = "Title"
@@ -1600,7 +1602,7 @@ function Tab:AddParagraph(titleText, contentText)
 	titleLabel.Text = titleText
 	titleLabel.TextColor3 = NebulaUI.Theme.Text
 	titleLabel.TextSize = titleSize
-	titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.TextWrapped = true
 	titleLabel.Parent = frame
 	
@@ -1613,7 +1615,7 @@ function Tab:AddParagraph(titleText, contentText)
 	contentLabel.Text = contentText
 	contentLabel.TextColor3 = NebulaUI.Theme.MutedText
 	contentLabel.TextSize = contentSize
-	contentLabel.TextXAlignment = Enum.TextXAlignment.Center
+	contentLabel.TextXAlignment = Enum.TextXAlignment.Left
 	contentLabel.TextWrapped = true
 	contentLabel.Parent = frame
 	
@@ -1643,61 +1645,21 @@ function Tab:AddSeparator(name)
 	local isMobile = self.Window.IsMobile
 	local frame = Instance.new("Frame")
 	frame.Name = "Separator_" .. name
-	frame.Size = UDim2.new(0.95, 0, 0, 24)
+	frame.Size = UDim2.new(0.95, 0, 0, 20)
 	frame.LayoutOrder = self.LayoutOrderCounter
 	frame.BackgroundTransparency = 1
 	frame.Parent = self.ContentFrame
 	
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Name = "TextLabel"
-	textLabel.Size = UDim2.new(0, 0, 1, 0)
-	textLabel.Position = UDim2.new(0.5, 0, 0, 0)
-	textLabel.AnchorPoint = Vector2.new(0.5, 0)
-	textLabel.BackgroundTransparency = 0
-	textLabel.BackgroundColor3 = NebulaUI.Theme.Background
+	textLabel.Size = UDim2.new(1, 0, 1, 0)
+	textLabel.BackgroundTransparency = 1
 	textLabel.Font = Enum.Font.GothamBold
 	textLabel.Text = string.upper(name)
-	textLabel.TextColor3 = NebulaUI.Theme.MutedText
-	textLabel.TextSize = isMobile and 9 or 10
+	textLabel.TextColor3 = NebulaUI.Theme.Accent
+	textLabel.TextSize = isMobile and 10 or 11
 	textLabel.TextXAlignment = Enum.TextXAlignment.Center
-	textLabel.AutomaticSize = Enum.AutomaticSize.X
-	textLabel.ZIndex = 2
 	textLabel.Parent = frame
-	
-	local labelPadding = Instance.new("UIPadding")
-	labelPadding.PaddingLeft = UDim.new(0, 8)
-	labelPadding.PaddingRight = UDim.new(0, 8)
-	labelPadding.Parent = textLabel
-	
-	local leftLine = Instance.new("Frame")
-	leftLine.Name = "LeftLine"
-	leftLine.Size = UDim2.new(0.4, -20, 0, 1)
-	leftLine.Position = UDim2.new(0, 0, 0.5, 0)
-	leftLine.BorderSizePixel = 0
-	leftLine.ZIndex = 1
-	leftLine.Parent = frame
-	
-	local leftGradient = Instance.new("UIGradient")
-	leftGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(0,0,0)),
-		ColorSequenceKeypoint.new(1, NebulaUI.Theme.CardBorder)
-	})
-	leftGradient.Parent = leftLine
-	
-	local rightLine = Instance.new("Frame")
-	rightLine.Name = "RightLine"
-	rightLine.Size = UDim2.new(0.4, -20, 0, 1)
-	rightLine.Position = UDim2.new(0.6, 20, 0.5, 0)
-	rightLine.BorderSizePixel = 0
-	rightLine.ZIndex = 1
-	rightLine.Parent = frame
-	
-	local rightGradient = Instance.new("UIGradient")
-	rightGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, NebulaUI.Theme.CardBorder),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(0,0,0))
-	})
-	rightGradient.Parent = rightLine
 	
 	NebulaTask.spawn(function() self:_UpdateCanvas() end)
 end
