@@ -561,6 +561,13 @@ function NebulaUI.CreateWindow(options)
 	local sidebarPadding = Instance.new("UIPadding")
 	sidebarPadding.PaddingTop = UDim.new(0, 8)
 	sidebarPadding.Parent = sidebar
+
+	local function updateSidebarScroll()
+		sidebar.CanvasSize = UDim2.new(0, 0, 0, sidebarLayout.AbsoluteContentSize.Y + 16)
+		sidebar.ScrollingEnabled = sidebarLayout.AbsoluteContentSize.Y > sidebar.AbsoluteSize.Y
+	end
+	sidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSidebarScroll)
+	sidebar:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateSidebarScroll)
 	
 	local verticalSeparator = Instance.new("Frame")
 	verticalSeparator.Name = "VerticalSeparator"
@@ -1580,7 +1587,7 @@ function Tab:AddParagraph(titleText, contentText)
 	
 	local sidebarWidth = isMobile and 95 or 120
 	local mainWidth = isMobile and 360 or 450
-	local contentWidth = (mainWidth - sidebarWidth - 1) * 0.95 - 20
+	local contentWidth = (mainWidth - sidebarWidth - 21) * 0.95 - 35
 	
 	local titleFont = Enum.Font.GothamBold
 	local titleSize = isMobile and 11 or 12
@@ -1590,7 +1597,7 @@ function Tab:AddParagraph(titleText, contentText)
 	local titleBounds = TextService:GetTextSize(titleText, titleSize, titleFont, Vector2.new(contentWidth, 1000))
 	local contentBounds = TextService:GetTextSize(contentText, contentSize, contentFont, Vector2.new(contentWidth, 1000))
 	
-	local height = titleBounds.Y + contentBounds.Y + 22
+	local height = titleBounds.Y + contentBounds.Y + 28
 	local frame = createBase(self, "Paragraph", height)
 	
 	local titleLabel = Instance.new("TextLabel")
@@ -1633,7 +1640,7 @@ function Tab:AddParagraph(titleText, contentText)
 			contentLabel.Size = UDim2.new(1, -20, 0, newContentBounds.Y)
 			contentLabel.Position = UDim2.new(0, 10, 0, 6 + newTitleBounds.Y + 4)
 			
-			frame.Size = UDim2.new(0.95, 0, 0, newTitleBounds.Y + newContentBounds.Y + 22)
+			frame.Size = UDim2.new(0.95, 0, 0, newTitleBounds.Y + newContentBounds.Y + 28)
 			self:_UpdateCanvas()
 		end
 	}
