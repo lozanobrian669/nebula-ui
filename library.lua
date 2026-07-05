@@ -1585,6 +1585,11 @@ function Tab:AddParagraph(titleText, contentText)
 	
 	local height = titleBounds.Y + contentBounds.Y + 22
 	local frame = createBase(self, "Paragraph", height)
+	frame.BackgroundTransparency = 1
+	local stroke = frame:FindFirstChildOfClass("UIStroke")
+	if stroke then
+		stroke.Enabled = false
+	end
 	
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Name = "Title"
@@ -1595,7 +1600,7 @@ function Tab:AddParagraph(titleText, contentText)
 	titleLabel.Text = titleText
 	titleLabel.TextColor3 = NebulaUI.Theme.Text
 	titleLabel.TextSize = titleSize
-	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Center
 	titleLabel.TextWrapped = true
 	titleLabel.Parent = frame
 	
@@ -1608,7 +1613,7 @@ function Tab:AddParagraph(titleText, contentText)
 	contentLabel.Text = contentText
 	contentLabel.TextColor3 = NebulaUI.Theme.MutedText
 	contentLabel.TextSize = contentSize
-	contentLabel.TextXAlignment = Enum.TextXAlignment.Left
+	contentLabel.TextXAlignment = Enum.TextXAlignment.Center
 	contentLabel.TextWrapped = true
 	contentLabel.Parent = frame
 	
