@@ -49,12 +49,14 @@ Crea e inicializa la ventana de la interfaz.
 |---|---|---|---|
 | `Title` | `string` | `"NebulaUI"` | Título principal en la cabecera. |
 | `SubTitle` | `string` | `"by Antigravity"` | Subtítulo decorativo en la cabecera. |
+| `ShowAvatar` | `boolean` | `true` | Determina si se muestra la foto de perfil (avatar) del jugador de forma asíncrona en el encabezado. |
 | `ConfigSaving` | `table` | `{ Enabled = false }` | Opciones de guardado automático (ver sección de Config). |
 
 ```lua
 local Window = NebulaUI.CreateWindow({
     Title = "Control Panel",
-    SubTitle = "Premium Edition"
+    SubTitle = "Premium Edition",
+    ShowAvatar = true -- Opcional: mostrar avatar en el header (true por defecto)
 })
 ```
 
