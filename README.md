@@ -120,20 +120,24 @@ Tab:AddButton("Ejecutar Acción", {
 
 #### 🔄 Toggle (Interruptor ON/OFF)
 ```lua
-Tab:AddToggle("Auto Farm", {
+local toggle = Tab:AddToggle("Auto Farm", {
     Default = false,
     Flag = "AutoFarmToggle",
     Callback = function(state)
         print("Estado:", state) -- true o false
     end
 })
+
+-- Métodos adicionales:
+toggle:SetValue(true) -- Cambia el estado del toggle (true/false)
+local estado = toggle:GetValue() -- Retorna el estado actual (boolean)
 ```
 
 ---
 
 #### ✏️ TextBox (Entrada de texto)
 ```lua
-Tab:AddTextBox("Nombre del Objetivo", {
+local textbox = Tab:AddTextBox("Nombre del Objetivo", {
     Placeholder = "Escribe un nombre...",
     ClearOnFocus = false,
     Flag = "TargetName",
@@ -141,13 +145,17 @@ Tab:AddTextBox("Nombre del Objetivo", {
         print("Objetivo fijado en:", text)
     end
 })
+
+-- Métodos adicionales:
+textbox:SetValue("Nuevo texto") -- Cambia el valor del texto
+local texto = textbox:GetValue() -- Retorna el texto actual (string)
 ```
 
 ---
 
 #### 📊 Slider (Barra deslizadora numérica)
 ```lua
-Tab:AddSlider("Velocidad de Caminado", {
+local slider = Tab:AddSlider("Velocidad de Caminado", {
 	Min = 16,
 	Max = 150,
 	Default = 16,
@@ -157,6 +165,10 @@ Tab:AddSlider("Velocidad de Caminado", {
 		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
 	end
 })
+
+-- Métodos adicionales:
+slider:SetValue(50) -- Cambia el valor actual
+local valor = slider:GetValue() -- Retorna el valor actual (number)
 ```
 
 ---
@@ -174,6 +186,7 @@ local dd = Tab:AddDropdown("Seleccionar Teleport", {
 
 -- Métodos adicionales:
 dd:SetValue("Zona VIP") -- Cambia el valor actual
+local valor = dd:GetValue() -- Retorna el valor seleccionado actualmente (string)
 dd:Refresh({"Spawn", "Tienda", "Zona VIP", "Nuevo Mapa"}) -- Reemplaza los elementos de la lista
 ```
 
@@ -181,26 +194,34 @@ dd:Refresh({"Spawn", "Tienda", "Zona VIP", "Nuevo Mapa"}) -- Reemplaza los eleme
 
 #### ⌨️ KeyBind (Asignación de tecla)
 ```lua
-Tab:AddKeyBind("Alternar Menú", {
+local kb = Tab:AddKeyBind("Alternar Menú", {
     Default = Enum.KeyCode.RightShift,
     Flag = "ToggleMenuKey",
     Callback = function()
         print("Tecla presionada!")
     end
 })
+
+-- Métodos adicionales:
+kb:SetValue(Enum.KeyCode.F) -- Cambia la tecla asignada
+local tecla = kb:GetValue() -- Retorna la tecla asignada actualmente (Enum.KeyCode)
 ```
 
 ---
 
 #### 🎨 ColorPicker (Selector de color)
 ```lua
-Tab:AddColorPicker("Color del ESP", {
+local cp = Tab:AddColorPicker("Color del ESP", {
     Default = Color3.fromRGB(155, 93, 229),
     Flag = "EspColorPicker",
     Callback = function(color)
         print("Color seleccionado:", color) -- Retorna un Color3
     end
 })
+
+-- Métodos adicionales:
+cp:SetValue(Color3.fromRGB(255, 0, 0)) -- Cambia el color seleccionado
+local color = cp:GetValue() -- Retorna el color actual (Color3)
 ```
 
 ---
