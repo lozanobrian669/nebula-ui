@@ -139,9 +139,11 @@ end
 
 -- Helper para crear los marcos base de los componentes de forma estándar y con hover
 local function createBase(tab, name, height)
+	tab.LayoutOrderCounter = (tab.LayoutOrderCounter or 0) + 1
 	local frame = Instance.new("Frame")
 	frame.Name = name .. "_Container"
 	frame.Size = UDim2.new(0.95, 0, 0, height)
+	frame.LayoutOrder = tab.LayoutOrderCounter
 	frame.BackgroundColor3 = NebulaUI.Theme.CardBackground
 	frame.BorderSizePixel = 0
 	frame.Parent = tab.ContentFrame
@@ -699,7 +701,7 @@ function Window:UpdateTheme(accentColor)
 			end
 		elseif name == "Value" then
 			local parent = obj.Parent
-			if parent and (parent.Name:find("Slider") or parent.Name == "Container") then
+			if parent and (parent.Name:find("Slider") or parent.Name:find("_Container")) then
 				obj.TextColor3 = accentColor
 			end
 		elseif name == "Knob" then
@@ -1567,30 +1569,45 @@ end
 -- Agregar un Paragraph (Párrafo largo con título) a la pestaña
 function Tab:AddParagraph(titleText, contentText)
 	local isMobile = self.Window.IsMobile
-	local height = isMobile and 54 or 62
+	local TextService = game:GetService("TextService")
+	
+	local sidebarWidth = isMobile and 95 or 120
+	local mainWidth = isMobile and 360 or 450
+	local contentWidth = (mainWidth - sidebarWidth - 1) * 0.95 - 20
+	
+	local titleFont = Enum.Font.GothamBold
+	local titleSize = isMobile and 11 or 12
+	local contentFont = Enum.Font.Gotham
+	local contentSize = isMobile and 9 or 10
+	
+	local titleBounds = TextService:GetTextSize(titleText, titleSize, titleFont, Vector2.new(contentWidth, 1000))
+	local contentBounds = TextService:GetTextSize(contentText, contentSize, contentFont, Vector2.new(contentWidth, 1000))
+	
+	local height = titleBounds.Y + contentBounds.Y + 22
 	local frame = createBase(self, "Paragraph", height)
 	
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Name = "Title"
-	titleLabel.Size = UDim2.new(1, -20, 0, isMobile and 16 or 20)
+	titleLabel.Size = UDim2.new(1, -20, 0, titleBounds.Y)
 	titleLabel.Position = UDim2.new(0, 10, 0, 6)
 	titleLabel.BackgroundTransparency = 1
-	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.Font = titleFont
 	titleLabel.Text = titleText
 	titleLabel.TextColor3 = NebulaUI.Theme.Text
-	titleLabel.TextSize = isMobile and 11 or 12
+	titleLabel.TextSize = titleSize
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.TextWrapped = true
 	titleLabel.Parent = frame
 	
 	local contentLabel = Instance.new("TextLabel")
 	contentLabel.Name = "Content"
-	contentLabel.Size = UDim2.new(1, -20, 1, isMobile and -26 or -32)
-	contentLabel.Position = UDim2.new(0, 10, 0, isMobile and 22 or 26)
+	contentLabel.Size = UDim2.new(1, -20, 0, contentBounds.Y)
+	contentLabel.Position = UDim2.new(0, 10, 0, 6 + titleBounds.Y + 4)
 	contentLabel.BackgroundTransparency = 1
-	contentLabel.Font = Enum.Font.Gotham
+	contentLabel.Font = contentFont
 	contentLabel.Text = contentText
 	contentLabel.TextColor3 = NebulaUI.Theme.MutedText
-	contentLabel.TextSize = isMobile and 9 or 10
+	contentLabel.TextSize = contentSize
 	contentLabel.TextXAlignment = Enum.TextXAlignment.Left
 	contentLabel.TextWrapped = true
 	contentLabel.Parent = frame
@@ -1601,16 +1618,28 @@ function Tab:AddParagraph(titleText, contentText)
 		Set = function(newTitle, newContent)
 			titleLabel.Text = newTitle
 			contentLabel.Text = newContent
+			
+			local newTitleBounds = TextService:GetTextSize(newTitle, titleSize, titleFont, Vector2.new(contentWidth, 1000))
+			local newContentBounds = TextService:GetTextSize(newContent, contentSize, contentFont, Vector2.new(contentWidth, 1000))
+			
+			titleLabel.Size = UDim2.new(1, -20, 0, newTitleBounds.Y)
+			contentLabel.Size = UDim2.new(1, -20, 0, newContentBounds.Y)
+			contentLabel.Position = UDim2.new(0, 10, 0, 6 + newTitleBounds.Y + 4)
+			
+			frame.Size = UDim2.new(0.95, 0, 0, newTitleBounds.Y + newContentBounds.Y + 22)
+			self:_UpdateCanvas()
 		end
 	}
 end
 
 -- Agregar un Separador visual
 function Tab:AddSeparator(name)
+	self.LayoutOrderCounter = (self.LayoutOrderCounter or 0) + 1
 	local isMobile = self.Window.IsMobile
 	local frame = Instance.new("Frame")
 	frame.Name = "Separator_" .. name
 	frame.Size = UDim2.new(0.95, 0, 0, 24)
+	frame.LayoutOrder = self.LayoutOrderCounter
 	frame.BackgroundTransparency = 1
 	frame.Parent = self.ContentFrame
 	
@@ -1618,20 +1647,29 @@ function Tab:AddSeparator(name)
 	textLabel.Name = "TextLabel"
 	textLabel.Size = UDim2.new(0, 0, 1, 0)
 	textLabel.Position = UDim2.new(0.5, 0, 0, 0)
-	textLabel.BackgroundTransparency = 1
+	textLabel.AnchorPoint = Vector2.new(0.5, 0)
+	textLabel.BackgroundTransparency = 0
+	textLabel.BackgroundColor3 = NebulaUI.Theme.Background
 	textLabel.Font = Enum.Font.GothamBold
 	textLabel.Text = string.upper(name)
 	textLabel.TextColor3 = NebulaUI.Theme.MutedText
 	textLabel.TextSize = isMobile and 9 or 10
 	textLabel.TextXAlignment = Enum.TextXAlignment.Center
+	textLabel.AutomaticSize = Enum.AutomaticSize.X
+	textLabel.ZIndex = 2
 	textLabel.Parent = frame
 	
-	-- Líneas laterales a la izquierda y derecha
+	local labelPadding = Instance.new("UIPadding")
+	labelPadding.PaddingLeft = UDim.new(0, 8)
+	labelPadding.PaddingRight = UDim.new(0, 8)
+	labelPadding.Parent = textLabel
+	
 	local leftLine = Instance.new("Frame")
 	leftLine.Name = "LeftLine"
 	leftLine.Size = UDim2.new(0.4, -20, 0, 1)
 	leftLine.Position = UDim2.new(0, 0, 0.5, 0)
 	leftLine.BorderSizePixel = 0
+	leftLine.ZIndex = 1
 	leftLine.Parent = frame
 	
 	local leftGradient = Instance.new("UIGradient")
@@ -1646,6 +1684,7 @@ function Tab:AddSeparator(name)
 	rightLine.Size = UDim2.new(0.4, -20, 0, 1)
 	rightLine.Position = UDim2.new(0.6, 20, 0.5, 0)
 	rightLine.BorderSizePixel = 0
+	rightLine.ZIndex = 1
 	rightLine.Parent = frame
 	
 	local rightGradient = Instance.new("UIGradient")
