@@ -1334,9 +1334,11 @@ function Tab:AddDropdown(name, options)
 	local isOpened = false
 	
 	-- Contenedor del dropdown (con ClipsDescendants para colapsar/abrir)
+	self.LayoutOrderCounter = (self.LayoutOrderCounter or 0) + 1
 	local frame = Instance.new("Frame")
 	frame.Name = name .. "_Dropdown"
 	frame.Size = UDim2.new(0.95, 0, 0, collapsedHeight)
+	frame.LayoutOrder = self.LayoutOrderCounter
 	frame.BackgroundColor3 = NebulaUI.Theme.CardBackground
 	frame.BorderSizePixel = 0
 	frame.ClipsDescendants = true
@@ -1583,45 +1585,47 @@ end
 -- Agregar un Paragraph (Párrafo largo con título) a la pestaña
 function Tab:AddParagraph(titleText, contentText)
 	local isMobile = self.Window.IsMobile
-	local TextService = game:GetService("TextService")
 	
-	local sidebarWidth = isMobile and 95 or 120
-	local mainWidth = isMobile and 360 or 450
-	local contentWidth = (mainWidth - sidebarWidth - 21) * 0.95 - 35
+	local frame = createBase(self, "Paragraph", 0)
+	frame.AutomaticSize = Enum.AutomaticSize.Y
 	
-	local titleFont = Enum.Font.GothamBold
-	local titleSize = isMobile and 11 or 12
-	local contentFont = Enum.Font.Gotham
-	local contentSize = isMobile and 9 or 10
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 4)
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = frame
 	
-	local titleBounds = TextService:GetTextSize(titleText, titleSize, titleFont, Vector2.new(contentWidth, 1000))
-	local contentBounds = TextService:GetTextSize(contentText, contentSize, contentFont, Vector2.new(contentWidth, 1000))
-	
-	local height = titleBounds.Y + contentBounds.Y + 28
-	local frame = createBase(self, "Paragraph", height)
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0, 8)
+	padding.PaddingBottom = UDim.new(0, 10)
+	padding.PaddingLeft = UDim.new(0, 10)
+	padding.PaddingRight = UDim.new(0, 10)
+	padding.Parent = frame
 	
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Name = "Title"
-	titleLabel.Size = UDim2.new(1, -20, 0, titleBounds.Y)
-	titleLabel.Position = UDim2.new(0, 10, 0, 6)
+	titleLabel.LayoutOrder = 1
+	titleLabel.Size = UDim2.new(1, 0, 0, 0)
+	titleLabel.AutomaticSize = Enum.AutomaticSize.Y
 	titleLabel.BackgroundTransparency = 1
-	titleLabel.Font = titleFont
+	titleLabel.Font = Enum.Font.GothamBold
 	titleLabel.Text = titleText
 	titleLabel.TextColor3 = NebulaUI.Theme.Text
-	titleLabel.TextSize = titleSize
+	titleLabel.TextSize = isMobile and 11 or 12
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.TextWrapped = true
 	titleLabel.Parent = frame
 	
 	local contentLabel = Instance.new("TextLabel")
 	contentLabel.Name = "Content"
-	contentLabel.Size = UDim2.new(1, -20, 0, contentBounds.Y)
-	contentLabel.Position = UDim2.new(0, 10, 0, 6 + titleBounds.Y + 4)
+	contentLabel.LayoutOrder = 2
+	contentLabel.Size = UDim2.new(1, 0, 0, 0)
+	contentLabel.AutomaticSize = Enum.AutomaticSize.Y
 	contentLabel.BackgroundTransparency = 1
-	contentLabel.Font = contentFont
+	contentLabel.Font = Enum.Font.Gotham
 	contentLabel.Text = contentText
 	contentLabel.TextColor3 = NebulaUI.Theme.MutedText
-	contentLabel.TextSize = contentSize
+	contentLabel.TextSize = isMobile and 9 or 10
 	contentLabel.TextXAlignment = Enum.TextXAlignment.Left
 	contentLabel.TextWrapped = true
 	contentLabel.Parent = frame
@@ -1632,15 +1636,6 @@ function Tab:AddParagraph(titleText, contentText)
 		Set = function(newTitle, newContent)
 			titleLabel.Text = newTitle
 			contentLabel.Text = newContent
-			
-			local newTitleBounds = TextService:GetTextSize(newTitle, titleSize, titleFont, Vector2.new(contentWidth, 1000))
-			local newContentBounds = TextService:GetTextSize(newContent, contentSize, contentFont, Vector2.new(contentWidth, 1000))
-			
-			titleLabel.Size = UDim2.new(1, -20, 0, newTitleBounds.Y)
-			contentLabel.Size = UDim2.new(1, -20, 0, newContentBounds.Y)
-			contentLabel.Position = UDim2.new(0, 10, 0, 6 + newTitleBounds.Y + 4)
-			
-			frame.Size = UDim2.new(0.95, 0, 0, newTitleBounds.Y + newContentBounds.Y + 28)
 			self:_UpdateCanvas()
 		end
 	}
@@ -1794,9 +1789,11 @@ function Tab:AddColorPicker(name, options)
 		return string.format("#%02X%02X%02X", r, g, b)
 	end
 	
+	self.LayoutOrderCounter = (self.LayoutOrderCounter or 0) + 1
 	local frame = Instance.new("Frame")
 	frame.Name = name .. "_ColorPicker"
 	frame.Size = UDim2.new(0.95, 0, 0, collapsedHeight)
+	frame.LayoutOrder = self.LayoutOrderCounter
 	frame.BackgroundColor3 = NebulaUI.Theme.CardBackground
 	frame.BorderSizePixel = 0
 	frame.ClipsDescendants = true
