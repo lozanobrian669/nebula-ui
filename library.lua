@@ -2092,4 +2092,177 @@ function Tab:AddColorPicker(name, options)
 	}
 end
 
+-- Agregar una Card (tarjeta informativa con ícono, título y color de fondo)
+function Tab:AddCard(name, options)
+	options = options or {}
+	local titleText = name or "Card"
+	local descriptionText = options.Description or ""
+	local iconText = options.Icon or ""
+	local cardColor = options.Color
+	local callback = options.Callback
+
+	local isMobile = self.Window.IsMobile
+	local height = isMobile and 46 or 56
+	local hasDesc = descriptionText ~= ""
+	local bgColor = cardColor or NebulaUI.Theme.CardBackground
+
+	-- Barra de acento: versión oscurecida del color de fondo (Accent si no hay color custom)
+	local barColor
+	if cardColor then
+		local h, s, v = Color3.toHSV(cardColor)
+		barColor = Color3.fromHSV(h, mathClamp(s * 1.1, 0, 1), mathClamp(v * 0.55, 0.05, 1))
+	else
+		barColor = NebulaUI.Theme.Accent
+	end
+
+	-- Color de borde al hacer hover: iluminación leve del color de la tarjeta
+	local hoverColor
+	if cardColor then
+		local h, s, v = Color3.toHSV(cardColor)
+		hoverColor = Color3.fromHSV(h, mathClamp(s * 0.7, 0, 1), mathClamp(v * 1.6, 0.35, 1))
+	else
+		hoverColor = NebulaUI.Theme.CardBorderHover
+	end
+
+	self.LayoutOrderCounter = (self.LayoutOrderCounter or 0) + 1
+	local frame = Instance.new("Frame")
+	frame.Name = titleText .. "_Card"
+	frame.Size = UDim2.new(0.95, 0, 0, height)
+	frame.LayoutOrder = self.LayoutOrderCounter
+	frame.BackgroundColor3 = bgColor
+	frame.BorderSizePixel = 0
+	frame.ClipsDescendants = true
+	frame.Parent = self.ContentFrame
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = frame
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = NebulaUI.Theme.CardBorder
+	stroke.Thickness = 1
+	stroke.Parent = frame
+
+	-- Barra de acento izquierda
+	local accentBar = Instance.new("Frame")
+	accentBar.Name = "AccentBar"
+	accentBar.Size = UDim2.new(0, 4, 1, 0)
+	accentBar.BackgroundColor3 = barColor
+	accentBar.BorderSizePixel = 0
+	accentBar.Parent = frame
+
+	-- Ícono en cuadro redondeado a la izquierda
+	local textLeft = 14
+	if iconText ~= "" then
+		local iconSize = isMobile and 28 or 34
+		local iconBox = Instance.new("Frame")
+		iconBox.Name = "IconBox"
+		iconBox.Size = udim2FromOffset(iconSize, iconSize)
+		iconBox.Position = UDim2.new(0, 12, 0.5, -iconSize / 2)
+		iconBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		iconBox.BackgroundTransparency = 0.9
+		iconBox.BorderSizePixel = 0
+		iconBox.Parent = frame
+
+		local iconCorner = Instance.new("UICorner")
+		iconCorner.CornerRadius = UDim.new(0, 6)
+		iconCorner.Parent = iconBox
+
+		-- El ícono acepta un asset de imagen ("rbxassetid://..." o un ID numérico) o texto/emoji
+		local isImageIcon = iconText:find("^rbxassetid://") ~= nil or iconText:find("^%d+$") ~= nil
+		if isImageIcon then
+			local iconImage = Instance.new("ImageLabel")
+			iconImage.Name = "Icon"
+			iconImage.Size = UDim2.new(1, -8, 1, -8)
+			iconImage.Position = UDim2.new(0, 4, 0, 4)
+			iconImage.BackgroundTransparency = 1
+			iconImage.Image = iconText:find("^%d+$") and ("rbxassetid://" .. iconText) or iconText
+			iconImage.ScaleType = Enum.ScaleType.Fit
+			iconImage.Parent = iconBox
+		else
+			local iconLabel = Instance.new("TextLabel")
+			iconLabel.Name = "Icon"
+			iconLabel.Size = UDim2.new(1, 0, 1, 0)
+			iconLabel.BackgroundTransparency = 1
+			iconLabel.Font = Enum.Font.GothamBold
+			iconLabel.Text = iconText
+			iconLabel.TextColor3 = NebulaUI.Theme.Text
+			iconLabel.TextSize = isMobile and 14 or 16
+			iconLabel.Parent = iconBox
+		end
+
+		textLeft = 12 + iconSize + 10
+	end
+
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Name = "Title"
+	titleLabel.Size = UDim2.new(1, -textLeft - 12, 0, isMobile and 14 or 16)
+	titleLabel.Position = hasDesc
+		and UDim2.new(0, textLeft, 0, isMobile and 8 or 11)
+		or UDim2.new(0, textLeft, 0.5, isMobile and -7 or -8)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.Text = titleText
+	titleLabel.TextColor3 = NebulaUI.Theme.Text
+	titleLabel.TextSize = isMobile and 11 or 12
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	titleLabel.Parent = frame
+
+	if hasDesc then
+		local descLabel = Instance.new("TextLabel")
+		descLabel.Name = "Description"
+		descLabel.Size = UDim2.new(1, -textLeft - 12, 0, isMobile and 12 or 14)
+		descLabel.Position = UDim2.new(0, textLeft, 0, isMobile and 24 or 29)
+		descLabel.BackgroundTransparency = 1
+		descLabel.Font = Enum.Font.Gotham
+		descLabel.Text = descriptionText
+		descLabel.TextColor3 = cardColor and Color3.fromRGB(222, 222, 228) or NebulaUI.Theme.MutedText
+		descLabel.TextSize = isMobile and 9 or 10
+		descLabel.TextXAlignment = Enum.TextXAlignment.Left
+		descLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		descLabel.Parent = frame
+	end
+
+	-- Hover: leve iluminación del borde
+	frame.MouseEnter:Connect(function()
+		TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Color = hoverColor
+		}):Play()
+	end)
+	frame.MouseLeave:Connect(function()
+		TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Color = NebulaUI.Theme.CardBorder
+		}):Play()
+	end)
+
+	-- Click opcional
+	if callback then
+		local clickArea = Instance.new("TextButton")
+		clickArea.Name = "ClickArea"
+		clickArea.Size = UDim2.new(1, 0, 1, 0)
+		clickArea.BackgroundTransparency = 1
+		clickArea.Text = ""
+		clickArea.Parent = frame
+
+		clickArea.MouseButton1Click:Connect(function()
+			pcall(callback)
+		end)
+	end
+
+	NebulaTask.spawn(function() self:_UpdateCanvas() end)
+
+	return {
+		SetTitle = function(newTitle)
+			titleLabel.Text = newTitle
+		end,
+		SetDescription = function(newDesc)
+			local descLabel = frame:FindFirstChild("Description")
+			if descLabel then
+				descLabel.Text = newDesc
+			end
+		end
+	}
+end
+
 return NebulaUI
