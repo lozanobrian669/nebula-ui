@@ -259,6 +259,7 @@ function NebulaUI.CreateWindow(options)
 	self.ActiveTab = nil
 	self.ConfigSaving = options.ConfigSaving or { Enabled = false }
 	self.Flags = {}
+	self.ToggleLocked = false
 	
 	pcall(function()
 		self:LoadConfig()
@@ -408,6 +409,8 @@ function NebulaUI.CreateWindow(options)
 	end
 	
 	toggleBtn.InputBegan:Connect(function(input)
+		-- Con el botón fijado no se inicia el arrastre; el click sigue funcionando
+		if self.ToggleLocked then return end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			draggingToggle = true
 			hasDraggedToggle = false
@@ -692,6 +695,16 @@ function NebulaUI.CreateWindow(options)
 	table.insert(NebulaUI.Windows, self)
 	
 	return self
+end
+
+-- Fijar o soltar el botón flotante: fijado (true) no se puede arrastrar,
+-- pero el click para abrir/cerrar el menú sigue funcionando
+function Window:SetToggleLocked(locked)
+	self.ToggleLocked = locked == true
+end
+
+function Window:GetToggleLocked()
+	return self.ToggleLocked == true
 end
 
 -- Eliminar esta ventana de la GUI
