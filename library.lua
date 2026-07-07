@@ -29,8 +29,11 @@ NebulaUI.__index = NebulaUI
 
 -- Presets de fondo: juegos de superficies coordinadas con contraste seguro.
 -- Se aplican con Window:ApplyPreset(nombre o tabla) sin afectar el color de acento.
+-- Accent es el acento recomendado para cada preset: ApplyPreset NO lo aplica;
+-- queda a disposición del script (ej: pasarlo al SetValue de un ColorPicker).
 NebulaUI.Presets = {
 	Nebula = {
+		Accent = Color3.fromRGB(155, 93, 229),
 		Background = Color3.fromRGB(8, 9, 13),
 		SidebarBackground = Color3.fromRGB(12, 13, 18),
 		HeaderBackground = Color3.fromRGB(16, 17, 24),
@@ -42,6 +45,7 @@ NebulaUI.Presets = {
 		ToggleOff = Color3.fromRGB(53, 54, 74)
 	},
 	Midnight = {
+		Accent = Color3.fromRGB(88, 148, 255),
 		Background = Color3.fromRGB(7, 10, 19),
 		SidebarBackground = Color3.fromRGB(11, 15, 27),
 		HeaderBackground = Color3.fromRGB(14, 19, 33),
@@ -53,6 +57,7 @@ NebulaUI.Presets = {
 		ToggleOff = Color3.fromRGB(48, 58, 92)
 	},
 	Carbon = {
+		Accent = Color3.fromRGB(0, 198, 255),
 		Background = Color3.fromRGB(10, 10, 11),
 		SidebarBackground = Color3.fromRGB(14, 14, 16),
 		HeaderBackground = Color3.fromRGB(18, 18, 20),
@@ -64,6 +69,7 @@ NebulaUI.Presets = {
 		ToggleOff = Color3.fromRGB(58, 58, 66)
 	},
 	Abyss = {
+		Accent = Color3.fromRGB(0, 226, 178),
 		Background = Color3.fromRGB(5, 12, 11),
 		SidebarBackground = Color3.fromRGB(8, 17, 16),
 		HeaderBackground = Color3.fromRGB(11, 22, 20),
@@ -553,40 +559,44 @@ function NebulaUI.CreateWindow(options)
 		end)
 	end
 
+	-- Título y subtítulo con alturas fijas para que el bloque quede
+	-- centrado verticalmente dentro del header de 50px sin desbordar
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(0.5, -textLeftOffset + 15, 0.5, 0)
-	title.Position = UDim2.new(0, textLeftOffset, 0, 8)
+	title.Size = UDim2.new(0.6, -textLeftOffset, 0, isMobile and 16 or 18)
+	title.Position = UDim2.new(0, textLeftOffset, 0, isMobile and 10 or 9)
 	title.BackgroundTransparency = 1
 	title.Font = Enum.Font.GothamBold
 	title.Text = titleText
 	title.TextColor3 = NebulaUI.Theme.Text
 	title.TextSize = isMobile and 14 or 15
 	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextTruncate = Enum.TextTruncate.AtEnd
 	title.Parent = header
 
 	local subtitle = Instance.new("TextLabel")
 	subtitle.Name = "Subtitle"
-	subtitle.Size = UDim2.new(0.5, -textLeftOffset + 15, 0.5, 0)
-	subtitle.Position = UDim2.new(0, textLeftOffset, 0.5, 2)
+	subtitle.Size = UDim2.new(0.6, -textLeftOffset, 0, isMobile and 11 or 12)
+	subtitle.Position = UDim2.new(0, textLeftOffset, 0, isMobile and 27 or 28)
 	subtitle.BackgroundTransparency = 1
 	subtitle.Font = Enum.Font.GothamSemibold
 	subtitle.Text = subTitleText
 	subtitle.TextColor3 = NebulaUI.Theme.Accent
 	subtitle.TextSize = isMobile and 9 or 10
 	subtitle.TextXAlignment = Enum.TextXAlignment.Left
+	subtitle.TextTruncate = Enum.TextTruncate.AtEnd
 	subtitle.Parent = header
 	
 	-- Botón de minimizar en la cabecera
 	local minBtn = Instance.new("TextButton")
 	minBtn.Name = "Minimize"
-	minBtn.Size = udim2FromOffset(30, 30)
-	minBtn.Position = UDim2.new(1, -40, 0.5, -15)
+	minBtn.Size = udim2FromOffset(36, 36)
+	minBtn.Position = UDim2.new(1, -46, 0.5, -18)
 	minBtn.BackgroundTransparency = 1
 	minBtn.TextColor3 = NebulaUI.Theme.MutedText
 	minBtn.Font = Enum.Font.GothamBold
-	minBtn.Text = "_"
-	minBtn.TextSize = 18
+	minBtn.Text = "−" -- signo menos: queda centrado verticalmente (el "_" renderiza abajo)
+	minBtn.TextSize = 22
 	minBtn.Parent = header
 	
 	minBtn.MouseButton1Click:Connect(function()
@@ -605,11 +615,40 @@ function NebulaUI.CreateWindow(options)
 	end)
 
 	-- 5. Barra Lateral (Sidebar) para Pestañas
+	-- Fondo separado: los hijos no heredan el UICorner del MainFrame, así que
+	-- se redondea la esquina inferior izquierda y se cuadran arriba y derecha
+	local sidebarBg = Instance.new("Frame")
+	sidebarBg.Name = "SidebarBg"
+	sidebarBg.Size = UDim2.new(0, sidebarWidth, 1, -51)
+	sidebarBg.Position = UDim2.new(0, 0, 0, 51)
+	sidebarBg.BackgroundColor3 = NebulaUI.Theme.SidebarBackground
+	sidebarBg.BorderSizePixel = 0
+	sidebarBg.Parent = mainFrame
+
+	local sidebarBgCorner = Instance.new("UICorner")
+	sidebarBgCorner.CornerRadius = UDim.new(0, 12)
+	sidebarBgCorner.Parent = sidebarBg
+
+	local sidebarBgTop = Instance.new("Frame")
+	sidebarBgTop.Name = "SquareTop"
+	sidebarBgTop.Size = UDim2.new(1, 0, 0, 12)
+	sidebarBgTop.BackgroundColor3 = NebulaUI.Theme.SidebarBackground
+	sidebarBgTop.BorderSizePixel = 0
+	sidebarBgTop.Parent = sidebarBg
+
+	local sidebarBgRight = Instance.new("Frame")
+	sidebarBgRight.Name = "SquareRight"
+	sidebarBgRight.Size = UDim2.new(0, 12, 1, -12)
+	sidebarBgRight.Position = UDim2.new(1, -12, 0, 12)
+	sidebarBgRight.BackgroundColor3 = NebulaUI.Theme.SidebarBackground
+	sidebarBgRight.BorderSizePixel = 0
+	sidebarBgRight.Parent = sidebarBg
+
 	local sidebar = Instance.new("ScrollingFrame")
 	sidebar.Name = "Sidebar"
 	sidebar.Size = UDim2.new(0, sidebarWidth, 1, -51)
 	sidebar.Position = UDim2.new(0, 0, 0, 51)
-	sidebar.BackgroundColor3 = NebulaUI.Theme.SidebarBackground
+	sidebar.BackgroundTransparency = 1
 	sidebar.BorderSizePixel = 0
 	sidebar.ScrollBarThickness = 0
 	sidebar.Parent = mainFrame
