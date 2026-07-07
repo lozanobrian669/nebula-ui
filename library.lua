@@ -18,10 +18,69 @@ local NebulaUI = {
 		CardBorderHover = Color3.fromRGB(155, 93, 229),
 		
 		ToggleOn = Color3.fromRGB(155, 93, 229),
-		ToggleOff = Color3.fromRGB(53, 54, 74)
+		ToggleOff = Color3.fromRGB(53, 54, 74),
+
+		ElementBackground = Color3.fromRGB(20, 21, 26),
+		InputBackground = Color3.fromRGB(24, 25, 32),
+		SliderTrack = Color3.fromRGB(35, 36, 45)
 	}
 }
 NebulaUI.__index = NebulaUI
+
+-- Presets de fondo: juegos de superficies coordinadas con contraste seguro.
+-- Se aplican con Window:ApplyPreset(nombre o tabla) sin afectar el color de acento.
+NebulaUI.Presets = {
+	Nebula = {
+		Background = Color3.fromRGB(8, 9, 13),
+		SidebarBackground = Color3.fromRGB(12, 13, 18),
+		HeaderBackground = Color3.fromRGB(16, 17, 24),
+		CardBackground = Color3.fromRGB(18, 19, 24),
+		CardBorder = Color3.fromRGB(30, 31, 38),
+		ElementBackground = Color3.fromRGB(20, 21, 26),
+		InputBackground = Color3.fromRGB(24, 25, 32),
+		SliderTrack = Color3.fromRGB(35, 36, 45),
+		ToggleOff = Color3.fromRGB(53, 54, 74)
+	},
+	Midnight = {
+		Background = Color3.fromRGB(7, 10, 19),
+		SidebarBackground = Color3.fromRGB(11, 15, 27),
+		HeaderBackground = Color3.fromRGB(14, 19, 33),
+		CardBackground = Color3.fromRGB(17, 22, 38),
+		CardBorder = Color3.fromRGB(30, 38, 60),
+		ElementBackground = Color3.fromRGB(19, 25, 42),
+		InputBackground = Color3.fromRGB(23, 30, 50),
+		SliderTrack = Color3.fromRGB(34, 43, 68),
+		ToggleOff = Color3.fromRGB(48, 58, 92)
+	},
+	Carbon = {
+		Background = Color3.fromRGB(10, 10, 11),
+		SidebarBackground = Color3.fromRGB(14, 14, 16),
+		HeaderBackground = Color3.fromRGB(18, 18, 20),
+		CardBackground = Color3.fromRGB(21, 21, 24),
+		CardBorder = Color3.fromRGB(34, 34, 38),
+		ElementBackground = Color3.fromRGB(23, 23, 26),
+		InputBackground = Color3.fromRGB(27, 27, 31),
+		SliderTrack = Color3.fromRGB(39, 39, 45),
+		ToggleOff = Color3.fromRGB(58, 58, 66)
+	},
+	Abyss = {
+		Background = Color3.fromRGB(5, 12, 11),
+		SidebarBackground = Color3.fromRGB(8, 17, 16),
+		HeaderBackground = Color3.fromRGB(11, 22, 20),
+		CardBackground = Color3.fromRGB(14, 26, 24),
+		CardBorder = Color3.fromRGB(26, 44, 41),
+		ElementBackground = Color3.fromRGB(16, 28, 26),
+		InputBackground = Color3.fromRGB(19, 33, 30),
+		SliderTrack = Color3.fromRGB(30, 50, 46),
+		ToggleOff = Color3.fromRGB(42, 68, 63)
+	}
+}
+
+-- Claves de superficie que un preset puede redefinir
+local PresetSurfaceKeys = {
+	"Background", "SidebarBackground", "HeaderBackground", "CardBackground",
+	"CardBorder", "ElementBackground", "InputBackground", "SliderTrack", "ToggleOff"
+}
 
 local Window = {}
 Window.__index = Window
@@ -137,8 +196,9 @@ local function getWindowSize()
 	return width, height, sidebarWidth, isMobile
 end
 
--- Helper para crear los marcos base de los componentes de forma estándar y con hover
-local function createBase(tab, name, height)
+-- Helper para crear los marcos base de los componentes de forma estándar.
+-- interactive = false omite el hover (para componentes informativos como Label/Paragraph)
+local function createBase(tab, name, height, interactive)
 	tab.LayoutOrderCounter = (tab.LayoutOrderCounter or 0) + 1
 	local frame = Instance.new("Frame")
 	frame.Name = name .. "_Container"
@@ -147,28 +207,30 @@ local function createBase(tab, name, height)
 	frame.BackgroundColor3 = NebulaUI.Theme.CardBackground
 	frame.BorderSizePixel = 0
 	frame.Parent = tab.ContentFrame
-	
+
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 8)
 	corner.Parent = frame
-	
+
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = NebulaUI.Theme.CardBorder
 	stroke.Thickness = 1
 	stroke.Parent = frame
-	
-	-- Efectos de hover suaves
-	frame.MouseEnter:Connect(function()
-		TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Color = NebulaUI.Theme.CardBorderHover
-		}):Play()
-	end)
-	frame.MouseLeave:Connect(function()
-		TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Color = NebulaUI.Theme.CardBorder
-		}):Play()
-	end)
-	
+
+	-- Efectos de hover suaves (solo en componentes interactivos)
+	if interactive ~= false then
+		frame.MouseEnter:Connect(function()
+			TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Color = NebulaUI.Theme.CardBorderHover
+			}):Play()
+		end)
+		frame.MouseLeave:Connect(function()
+			TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Color = NebulaUI.Theme.CardBorder
+			}):Play()
+		end)
+	end
+
 	return frame
 end
 
@@ -241,7 +303,7 @@ function NebulaUI.CreateWindow(options)
 	-- (el módulo evita que el offset crezca sin límite si se abren/cierran muchas ventanas)
 	local offsetMultiplier = #NebulaUI.Windows % 6
 	toggleBtn.Position = UDim2.new(0, 15 + (offsetMultiplier * 15), 0.5, 40 + (offsetMultiplier * 10))
-	toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 21, 26)
+	toggleBtn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
 	toggleBtn.Parent = screenGui
 	
 	local toggleCorner = Instance.new("UICorner")
@@ -409,12 +471,12 @@ function NebulaUI.CreateWindow(options)
 	-- Hover en el botón flotante
 	toggleBtn.MouseEnter:Connect(function()
 		TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
-			BackgroundColor3 = Color3.fromRGB(30, 31, 38)
+			BackgroundColor3 = NebulaUI.Theme.CardBorder
 		}):Play()
 	end)
 	toggleBtn.MouseLeave:Connect(function()
 		TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
-			BackgroundColor3 = Color3.fromRGB(20, 21, 26)
+			BackgroundColor3 = NebulaUI.Theme.ElementBackground
 		}):Play()
 	end)
 	
@@ -766,6 +828,50 @@ function Window:UpdateTheme(accentColor)
 	end
 end
 
+-- Aplicar un preset de fondo (nombre de NebulaUI.Presets o tabla propia de superficies).
+-- Cambia solo las superficies (fondos, bordes, pistas); el color de acento no se toca.
+function Window:ApplyPreset(preset)
+	if type(preset) == "string" then
+		preset = NebulaUI.Presets[preset]
+	end
+	if type(preset) ~= "table" or not self.ScreenGui then return end
+
+	-- Mapear superficie vieja -> nueva y actualizar el tema global
+	-- (lo que se construya después ya nace con los colores del preset)
+	local swaps = {}
+	for _, key in ipairs(PresetSurfaceKeys) do
+		local newColor = preset[key]
+		if newColor and nebulaTypeof(newColor) == "Color3" then
+			local oldColor = NebulaUI.Theme[key]
+			if oldColor and oldColor ~= newColor then
+				table.insert(swaps, { old = oldColor, new = newColor })
+			end
+			NebulaUI.Theme[key] = newColor
+		end
+	end
+
+	if #swaps == 0 then return end
+
+	-- Reemplazar cada superficie existente en la UI viva por su nueva versión
+	for _, obj in ipairs(self.ScreenGui:GetDescendants()) do
+		if obj:IsA("GuiObject") then
+			for _, swap in ipairs(swaps) do
+				if obj.BackgroundColor3 == swap.old then
+					obj.BackgroundColor3 = swap.new
+					break
+				end
+			end
+		elseif obj:IsA("UIStroke") then
+			for _, swap in ipairs(swaps) do
+				if obj.Color == swap.old then
+					obj.Color = swap.new
+					break
+				end
+			end
+		end
+	end
+end
+
 -- Agregar una pestaña (Tab) al menú
 function Window:AddTab(title)
 	local tabObj = setmetatable({}, Tab)
@@ -778,7 +884,7 @@ function Window:AddTab(title)
 	local btn = Instance.new("TextButton")
 	btn.Name = title
 	btn.Size = UDim2.new(0.9, 0, 0, isMobile and 28 or 32)
-	btn.BackgroundColor3 = Color3.fromRGB(20, 21, 26)
+	btn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
 	btn.BorderSizePixel = 0
 	btn.Font = Enum.Font.GothamMedium
 	btn.Text = title
@@ -832,7 +938,7 @@ function Window:AddTab(title)
 			otherTab.Active = false
 			otherTab.ContentFrame.Visible = false
 			otherTab.Button.TextColor3 = NebulaUI.Theme.MutedText
-			otherTab.Button.BackgroundColor3 = Color3.fromRGB(20, 21, 26)
+			otherTab.Button.BackgroundColor3 = NebulaUI.Theme.ElementBackground
 			local stroke = otherTab.Button:FindFirstChildOfClass("UIStroke")
 			if stroke then
 				stroke.Color = NebulaUI.Theme.CardBorder
@@ -842,7 +948,7 @@ function Window:AddTab(title)
 		tabObj.Active = true
 		contentFrame.Visible = true
 		btn.TextColor3 = NebulaUI.Theme.Accent
-		btn.BackgroundColor3 = Color3.fromRGB(20, 21, 26)
+		btn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
 		local stroke = btn:FindFirstChildOfClass("UIStroke")
 		if stroke then
 			stroke.Color = NebulaUI.Theme.CardBorder
@@ -914,7 +1020,7 @@ function Tab:AddSlider(name, options)
 	sliderTrack.Name = "Track"
 	sliderTrack.Size = UDim2.new(1, -20, 0, isMobile and 5 or 6)
 	sliderTrack.Position = UDim2.new(0, 10, 0, isMobile and 30 or 36)
-	sliderTrack.BackgroundColor3 = Color3.fromRGB(35, 36, 45)
+	sliderTrack.BackgroundColor3 = NebulaUI.Theme.SliderTrack
 	sliderTrack.BorderSizePixel = 0
 	sliderTrack.Parent = sliderFrame
 	
@@ -1256,7 +1362,7 @@ function Tab:AddTextBox(name, options)
 	inputFrame.Name = "InputFrame"
 	inputFrame.Size = UDim2.new(0.4, 0, 0, isMobile and 24 or 28)
 	inputFrame.Position = UDim2.new(0.6, -12, 0.5, isMobile and -12 or -14)
-	inputFrame.BackgroundColor3 = Color3.fromRGB(24, 25, 32)
+	inputFrame.BackgroundColor3 = NebulaUI.Theme.InputBackground
 	inputFrame.BorderSizePixel = 0
 	inputFrame.Parent = frame
 	
@@ -1437,7 +1543,7 @@ function Tab:AddDropdown(name, options)
 			local opt = Instance.new("TextButton")
 			opt.Name = item
 			opt.Size = UDim2.new(1, 0, 0, isMobile and 24 or 28)
-			opt.BackgroundColor3 = (item == selectedValue) and Color3.fromRGB(35, 22, 45) or Color3.fromRGB(24, 25, 32)
+			opt.BackgroundColor3 = (item == selectedValue) and Color3.fromRGB(35, 22, 45) or NebulaUI.Theme.InputBackground
 			opt.BorderSizePixel = 0
 			opt.Font = Enum.Font.GothamMedium
 			opt.Text = "  " .. item
@@ -1464,7 +1570,7 @@ function Tab:AddDropdown(name, options)
 				for _, otherOpt in ipairs(listFrame:GetChildren()) do
 					if otherOpt:IsA("TextButton") then
 						local isSelected = (otherOpt.Name == selectedValue)
-						otherOpt.BackgroundColor3 = isSelected and Color3.fromRGB(35, 22, 45) or Color3.fromRGB(24, 25, 32)
+						otherOpt.BackgroundColor3 = isSelected and Color3.fromRGB(35, 22, 45) or NebulaUI.Theme.InputBackground
 						otherOpt.TextColor3 = isSelected and NebulaUI.Theme.Accent or NebulaUI.Theme.MutedText
 					end
 				end
@@ -1558,7 +1664,7 @@ function Tab:AddLabel(text, options)
 	local color = options.Color or NebulaUI.Theme.Text
 	
 	local isMobile = self.Window.IsMobile
-	local frame = createBase(self, "Label", isMobile and 30 or 34)
+	local frame = createBase(self, "Label", isMobile and 30 or 34, false)
 	
 	local label = Instance.new("TextLabel")
 	label.Name = "TextLabel"
@@ -1586,7 +1692,7 @@ end
 function Tab:AddParagraph(titleText, contentText)
 	local isMobile = self.Window.IsMobile
 	
-	local frame = createBase(self, "Paragraph", 0)
+	local frame = createBase(self, "Paragraph", 0, false)
 	frame.AutomaticSize = Enum.AutomaticSize.Y
 	
 	local layout = Instance.new("UIListLayout")
@@ -1701,7 +1807,7 @@ function Tab:AddKeyBind(name, options)
 	bindBtn.Name = "BindBtn"
 	bindBtn.Size = UDim2.new(0.3, 0, 0, isMobile and 24 or 28)
 	bindBtn.Position = UDim2.new(0.7, -12, 0.5, isMobile and -12 or -14)
-	bindBtn.BackgroundColor3 = Color3.fromRGB(24, 25, 32)
+	bindBtn.BackgroundColor3 = NebulaUI.Theme.InputBackground
 	bindBtn.Font = Enum.Font.GothamBold
 	bindBtn.Text = currentKey.Name
 	bindBtn.TextColor3 = NebulaUI.Theme.Accent
