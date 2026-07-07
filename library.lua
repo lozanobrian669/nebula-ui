@@ -2099,10 +2099,11 @@ function Tab:AddCard(name, options)
 	local descriptionText = options.Description or ""
 	local iconText = options.Icon or ""
 	local cardColor = options.Color
+	local glass = options.Glass or false
 	local callback = options.Callback
 
 	local isMobile = self.Window.IsMobile
-	local height = isMobile and 46 or 56
+	local minHeight = isMobile and 46 or 56
 	local hasDesc = descriptionText ~= ""
 	local bgColor = cardColor or NebulaUI.Theme.CardBackground
 
@@ -2127,7 +2128,7 @@ function Tab:AddCard(name, options)
 	self.LayoutOrderCounter = (self.LayoutOrderCounter or 0) + 1
 	local frame = Instance.new("Frame")
 	frame.Name = titleText .. "_Card"
-	frame.Size = UDim2.new(0.95, 0, 0, height)
+	frame.Size = UDim2.new(0.95, 0, 0, minHeight)
 	frame.LayoutOrder = self.LayoutOrderCounter
 	frame.BackgroundColor3 = bgColor
 	frame.BorderSizePixel = 0
@@ -2139,17 +2140,37 @@ function Tab:AddCard(name, options)
 	corner.Parent = frame
 
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = NebulaUI.Theme.CardBorder
+	stroke.Color = glass and Color3.fromRGB(255, 255, 255) or NebulaUI.Theme.CardBorder
+	stroke.Transparency = glass and 0.86 or 0
 	stroke.Thickness = 1
 	stroke.Parent = frame
 
-	-- Barra de acento izquierda
+	-- Efecto sutil de glasmorfismo: fondo semitransparente con brillo degradado
+	if glass then
+		frame.BackgroundTransparency = 0.25
+		local sheen = Instance.new("UIGradient")
+		sheen.Rotation = 90
+		sheen.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(195, 195, 205))
+		sheen.Parent = frame
+	end
+
+	-- Barra de acento izquierda (pill interna: queda dentro del borde redondeado de la tarjeta)
 	local accentBar = Instance.new("Frame")
 	accentBar.Name = "AccentBar"
-	accentBar.Size = UDim2.new(0, 4, 1, 0)
+	accentBar.AnchorPoint = Vector2.new(0, 0.5)
+	accentBar.Position = UDim2.new(0, 6, 0.5, 0)
+	accentBar.Size = udim2FromOffset(3, minHeight - 20)
 	accentBar.BackgroundColor3 = barColor
 	accentBar.BorderSizePixel = 0
 	accentBar.Parent = frame
+
+	local accentCorner = Instance.new("UICorner")
+	accentCorner.CornerRadius = UDim.new(1, 0)
+	accentCorner.Parent = accentBar
+
+	frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		accentBar.Size = udim2FromOffset(3, math.max(frame.AbsoluteSize.Y - 20, 12))
+	end)
 
 	-- Ícono en cuadro redondeado a la izquierda
 	local textLeft = 14
@@ -2194,46 +2215,79 @@ function Tab:AddCard(name, options)
 		textLeft = 12 + iconSize + 10
 	end
 
+	-- Contenedor de texto con altura automática: la tarjeta muestra todo su contenido
+	local textHolder = Instance.new("Frame")
+	textHolder.Name = "TextHolder"
+	textHolder.AnchorPoint = Vector2.new(0, 0.5)
+	textHolder.Position = UDim2.new(0, textLeft, 0.5, 0)
+	textHolder.Size = UDim2.new(1, -textLeft - 12, 0, 0)
+	textHolder.AutomaticSize = Enum.AutomaticSize.Y
+	textHolder.BackgroundTransparency = 1
+	textHolder.Parent = frame
+
+	local textLayout = Instance.new("UIListLayout")
+	textLayout.Padding = UDim.new(0, 2)
+	textLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	textLayout.Parent = textHolder
+
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Name = "Title"
-	titleLabel.Size = UDim2.new(1, -textLeft - 12, 0, isMobile and 14 or 16)
-	titleLabel.Position = hasDesc
-		and UDim2.new(0, textLeft, 0, isMobile and 8 or 11)
-		or UDim2.new(0, textLeft, 0.5, isMobile and -7 or -8)
+	titleLabel.LayoutOrder = 1
+	titleLabel.Size = UDim2.new(1, 0, 0, 0)
+	titleLabel.AutomaticSize = Enum.AutomaticSize.Y
 	titleLabel.BackgroundTransparency = 1
 	titleLabel.Font = Enum.Font.GothamBold
 	titleLabel.Text = titleText
 	titleLabel.TextColor3 = NebulaUI.Theme.Text
 	titleLabel.TextSize = isMobile and 11 or 12
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-	titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	titleLabel.Parent = frame
+	titleLabel.TextWrapped = true
+	titleLabel.Parent = textHolder
 
 	if hasDesc then
 		local descLabel = Instance.new("TextLabel")
 		descLabel.Name = "Description"
-		descLabel.Size = UDim2.new(1, -textLeft - 12, 0, isMobile and 12 or 14)
-		descLabel.Position = UDim2.new(0, textLeft, 0, isMobile and 24 or 29)
+		descLabel.LayoutOrder = 2
+		descLabel.Size = UDim2.new(1, 0, 0, 0)
+		descLabel.AutomaticSize = Enum.AutomaticSize.Y
 		descLabel.BackgroundTransparency = 1
 		descLabel.Font = Enum.Font.Gotham
 		descLabel.Text = descriptionText
 		descLabel.TextColor3 = cardColor and Color3.fromRGB(222, 222, 228) or NebulaUI.Theme.MutedText
 		descLabel.TextSize = isMobile and 9 or 10
 		descLabel.TextXAlignment = Enum.TextXAlignment.Left
-		descLabel.TextTruncate = Enum.TextTruncate.AtEnd
-		descLabel.Parent = frame
+		descLabel.TextWrapped = true
+		descLabel.Parent = textHolder
 	end
+
+	-- Crecer en altura para mostrar todo el texto sin truncar
+	textLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		local contentHeight = textLayout.AbsoluteContentSize.Y + (isMobile and 18 or 22)
+		frame.Size = UDim2.new(0.95, 0, 0, math.max(minHeight, contentHeight))
+	end)
 
 	-- Hover: leve iluminación del borde
 	frame.MouseEnter:Connect(function()
-		TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Color = hoverColor
-		}):Play()
+		if glass then
+			TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Transparency = 0.55
+			}):Play()
+		else
+			TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Color = hoverColor
+			}):Play()
+		end
 	end)
 	frame.MouseLeave:Connect(function()
-		TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Color = NebulaUI.Theme.CardBorder
-		}):Play()
+		if glass then
+			TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Transparency = 0.86
+			}):Play()
+		else
+			TweenService:Create(stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Color = NebulaUI.Theme.CardBorder
+			}):Play()
+		end
 	end)
 
 	-- Click opcional
@@ -2257,7 +2311,7 @@ function Tab:AddCard(name, options)
 			titleLabel.Text = newTitle
 		end,
 		SetDescription = function(newDesc)
-			local descLabel = frame:FindFirstChild("Description")
+			local descLabel = frame:FindFirstChild("Description", true)
 			if descLabel then
 				descLabel.Text = newDesc
 			end
