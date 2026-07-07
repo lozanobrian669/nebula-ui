@@ -1293,14 +1293,31 @@ function Tab:AddButton(name, options)
 	
 	local isMobile = self.Window.IsMobile
 	local hasDesc = description ~= ""
-	local height = hasDesc and (isMobile and 46 or 52) or (isMobile and 38 or 44)
-	
-	local frame = createBase(self, name, height)
-	
+	local minHeight = hasDesc and (isMobile and 46 or 52) or (isMobile and 38 or 44)
+
+	local frame = createBase(self, name, minHeight)
+
+	-- Texto en contenedor con altura automática: termina antes del botón
+	-- (sin solaparse) y la tarjeta crece si la descripción ocupa varias líneas
+	local textHolder = Instance.new("Frame")
+	textHolder.Name = "TextHolder"
+	textHolder.AnchorPoint = Vector2.new(0, 0.5)
+	textHolder.Position = UDim2.new(0, 12, 0.5, 0)
+	textHolder.Size = UDim2.new(0.7, -32, 0, 0)
+	textHolder.AutomaticSize = Enum.AutomaticSize.Y
+	textHolder.BackgroundTransparency = 1
+	textHolder.Parent = frame
+
+	local textLayout = Instance.new("UIListLayout")
+	textLayout.Padding = UDim.new(0, 2)
+	textLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	textLayout.Parent = textHolder
+
 	local label = Instance.new("TextLabel")
 	label.Name = "Label"
-	label.Size = UDim2.new(0.65, -12, hasDesc and 0.5 or 1, 0)
-	label.Position = UDim2.new(0, 12, 0, hasDesc and 4 or 0)
+	label.LayoutOrder = 1
+	label.Size = UDim2.new(1, 0, 0, 0)
+	label.AutomaticSize = Enum.AutomaticSize.Y
 	label.BackgroundTransparency = 1
 	label.Font = Enum.Font.GothamMedium
 	label.Text = name
@@ -1308,13 +1325,14 @@ function Tab:AddButton(name, options)
 	label.TextSize = isMobile and 11 or 12
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextWrapped = true
-	label.Parent = frame
-	
+	label.Parent = textHolder
+
 	if hasDesc then
 		local descLabel = Instance.new("TextLabel")
 		descLabel.Name = "Description"
-		descLabel.Size = UDim2.new(0.65, -12, 0.5, 0)
-		descLabel.Position = UDim2.new(0, 12, 0.5, -2)
+		descLabel.LayoutOrder = 2
+		descLabel.Size = UDim2.new(1, 0, 0, 0)
+		descLabel.AutomaticSize = Enum.AutomaticSize.Y
 		descLabel.BackgroundTransparency = 1
 		descLabel.Font = Enum.Font.Gotham
 		descLabel.Text = description
@@ -1322,9 +1340,15 @@ function Tab:AddButton(name, options)
 		descLabel.TextSize = isMobile and 9 or 10
 		descLabel.TextXAlignment = Enum.TextXAlignment.Left
 		descLabel.TextWrapped = true
-		descLabel.Parent = frame
+		descLabel.Parent = textHolder
 	end
-	
+
+	-- Crecer en altura para mostrar todo el texto
+	textLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		local contentHeight = textLayout.AbsoluteContentSize.Y + (isMobile and 16 or 20)
+		frame.Size = UDim2.new(0.95, 0, 0, math.max(minHeight, contentHeight))
+	end)
+
 	local button = Instance.new("TextButton")
 	button.Name = "Button"
 	button.Size = UDim2.new(0.3, 0, 0, isMobile and 24 or 28)
