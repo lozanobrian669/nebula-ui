@@ -310,6 +310,26 @@ function NebulaUI.CreateWindow(options)
 	-- (el módulo evita que el offset crezca sin límite si se abren/cierran muchas ventanas)
 	local offsetMultiplier = #NebulaUI.Windows % 6
 	toggleBtn.Position = UDim2.new(0, 15 + (offsetMultiplier * 15), 0.5, 40 + (offsetMultiplier * 10))
+	-- Restaurar la posición guardada del botón flotante (flag interno del config).
+	-- Solo se aplica si sigue cayendo dentro del viewport actual: si cambió la
+	-- resolución y quedaría fuera de pantalla, se usa la posición por defecto.
+	do
+		local savedTogglePos = self.Flags["_TogglePosition"]
+		if type(savedTogglePos) == "table" and #savedTogglePos == 4 then
+			local ok, restored = pcall(function()
+				return UDim2.new(savedTogglePos[1], savedTogglePos[2], savedTogglePos[3], savedTogglePos[4])
+			end)
+			if ok and restored then
+				local camera = workspace.CurrentCamera
+				local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
+				local absX = restored.X.Scale * viewport.X + restored.X.Offset
+				local absY = restored.Y.Scale * viewport.Y + restored.Y.Offset
+				if absX >= 0 and absX <= viewport.X - 46 and absY >= 0 and absY <= viewport.Y - 46 then
+					toggleBtn.Position = restored
+				end
+			end
+		end
+	end
 	toggleBtn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
 	toggleBtn.Parent = screenGui
 	
@@ -419,12 +439,20 @@ function NebulaUI.CreateWindow(options)
 			
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
-					draggingToggle = false
+					if draggingToggle then
+						draggingToggle = false
+						-- Persistir dónde quedó el botón al soltar el arrastre.
+						-- Flag interno: viaja en el mismo config.json que el resto
+						-- y se restaura en CreateWindow.
+						local pos = toggleBtn.Position
+						self.Flags["_TogglePosition"] = { pos.X.Scale, pos.X.Offset, pos.Y.Scale, pos.Y.Offset }
+						self:SaveConfig()
+					end
 				end
 			end)
 		end
 	end)
-	
+
 	toggleBtn.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
