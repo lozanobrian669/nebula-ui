@@ -889,9 +889,18 @@ function Window:UpdateTheme(accentColor)
 			obj.BackgroundColor3 = accentColor
 			
 		-- Pestañas en el Sidebar
+		-- CAMBIO REDISEÑO: el tab activo ahora also tinta su fondo y su barra
+		-- izquierda con el accent (antes solo cambiaba TextColor3). El chequeo
+		-- "no es MutedText" sigue siendo la forma de detectar cuál es el tab
+		-- activo, sin agregar estado nuevo.
 		elseif obj:IsA("TextButton") and obj.Parent and obj.Parent.Name == "Sidebar" then
 			if obj.TextColor3 ~= NebulaUI.Theme.MutedText then
 				obj.TextColor3 = accentColor
+				obj.BackgroundColor3 = accentColor
+				local bar = obj:FindFirstChild("ActiveBar")
+				if bar and bar.BackgroundTransparency < 1 then
+					bar.BackgroundColor3 = accentColor
+				end
 			end
 			
 		-- ScrollingFrames
@@ -960,26 +969,41 @@ function Window:AddTab(title)
 	
 	local isMobile = self.IsMobile
 	
-	-- Botón de pestaña en el Sidebar
+	-- CAMBIO REDISEÑO: botón de pestaña estilo pill. Se saca el UIStroke fijo
+	-- (el mockup no lleva borde en los tabs, solo tinte de fondo) y se sube
+	-- levemente el radio de esquina para que se sienta más "pill".
 	local btn = Instance.new("TextButton")
 	btn.Name = title
 	btn.Size = UDim2.new(0.9, 0, 0, isMobile and 28 or 32)
 	btn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
+	btn.BackgroundTransparency = 1 -- CAMBIO: inactivo por defecto es transparente, no un bloque sólido
 	btn.BorderSizePixel = 0
-	btn.Font = Enum.Font.GothamMedium
+	btn.Font = Enum.Font.GothamBold -- CAMBIO: GothamBold en vez de GothamMedium, más parecido al peso del mockup
 	btn.Text = title
 	btn.TextColor3 = NebulaUI.Theme.MutedText
 	btn.TextSize = isMobile and 11 or 12
 	btn.Parent = self.Sidebar
 	
 	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.CornerRadius = UDim.new(0, 7)
 	btnCorner.Parent = btn
 	
-	local btnStroke = Instance.new("UIStroke")
-	btnStroke.Color = NebulaUI.Theme.CardBorder
-	btnStroke.Thickness = 1
-	btnStroke.Parent = btn
+	-- CAMBIO REDISEÑO: barra de acento a la izquierda, visible solo cuando
+	-- el tab está activo (replica el ::before del mockup). Vive dentro del
+	-- botón, así no hay que trackear posiciones absolutas en el ScrollingFrame.
+	local activeBar = Instance.new("Frame")
+	activeBar.Name = "ActiveBar"
+	activeBar.AnchorPoint = Vector2.new(0, 0.5)
+	activeBar.Position = UDim2.new(0, 0, 0.5, 0)
+	activeBar.Size = UDim2.new(0, 3, 0.6, 0)
+	activeBar.BackgroundColor3 = NebulaUI.Theme.Accent
+	activeBar.BackgroundTransparency = 1 -- oculta por defecto
+	activeBar.BorderSizePixel = 0
+	activeBar.Parent = btn
+
+	local activeBarCorner = Instance.new("UICorner")
+	activeBarCorner.CornerRadius = UDim.new(1, 0)
+	activeBarCorner.Parent = activeBar
 	
 	-- Contenedor deslizable de la pestaña
 	local contentFrame = Instance.new("ScrollingFrame")
@@ -1012,30 +1036,48 @@ function Window:AddTab(title)
 		tabObj:_UpdateCanvas()
 	end)
 	
-	-- Función para activar la pestaña de forma segura
+	-- CAMBIO REDISEÑO: selectTab ahora tintea el fondo con el accent
+	-- (BackgroundTransparency alto = efecto "accent-soft" del mockup) y
+	-- muestra/oculta la barra izquierda, en vez de solo cambiar TextColor3.
 	local function selectTab()
 		for _, otherTab in ipairs(self.Tabs) do
 			otherTab.Active = false
 			otherTab.ContentFrame.Visible = false
 			otherTab.Button.TextColor3 = NebulaUI.Theme.MutedText
-			otherTab.Button.BackgroundColor3 = NebulaUI.Theme.ElementBackground
-			local stroke = otherTab.Button:FindFirstChildOfClass("UIStroke")
-			if stroke then
-				stroke.Color = NebulaUI.Theme.CardBorder
+			otherTab.Button.BackgroundTransparency = 1
+			local bar = otherTab.Button:FindFirstChild("ActiveBar")
+			if bar then
+				bar.BackgroundTransparency = 1
 			end
 		end
 		
 		tabObj.Active = true
 		contentFrame.Visible = true
 		btn.TextColor3 = NebulaUI.Theme.Accent
-		btn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
-		local stroke = btn:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			stroke.Color = NebulaUI.Theme.CardBorder
-		end
+		btn.BackgroundColor3 = NebulaUI.Theme.Accent
+		btn.BackgroundTransparency = 0.88
+		activeBar.BackgroundTransparency = 0
 	end
 	
 	btn.MouseButton1Click:Connect(selectTab)
+	
+	-- CAMBIO REDISEÑO: hover sutil en tabs inactivos, mismo criterio que
+	-- createBase usa para cards (no interfiere con el tab activo)
+	btn.MouseEnter:Connect(function()
+		if not tabObj.Active then
+			TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 0.9,
+			}):Play()
+			btn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
+		end
+	end)
+	btn.MouseLeave:Connect(function()
+		if not tabObj.Active then
+			TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 1,
+			}):Play()
+		end
+	end)
 	
 	table.insert(self.Tabs, tabObj)
 	
