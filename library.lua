@@ -869,12 +869,21 @@ function Window:UpdateTheme(accentColor)
 				if stroke then stroke.Color = accentColor end
 			end
 		
-		-- Toggles
+		-- Toggles: el estado se lee del atributo "On" (fuente de verdad que
+		-- setea AddToggle), no comparando colores — durante la animación de
+		-- encendido el color es intermedio y la comparación fallaba. Se
+		-- recolorea con un TWEEN a propósito: un tween nuevo sobre la misma
+		-- propiedad CANCELA al que esté en vuelo (si el toggle se prendió
+		-- justo antes de cambiar el acento, el tween viejo hacia el accent
+		-- anterior le ganaba a la asignación directa y quedaba violeta).
 		elseif name == "Switch" then
-			if obj.BackgroundColor3 ~= NebulaUI.Theme.ToggleOff then
-				obj.BackgroundColor3 = accentColor
+			local isOn = obj:GetAttribute("On")
+			if isOn == true or (isOn == nil and obj.BackgroundColor3 ~= NebulaUI.Theme.ToggleOff) then
+				TweenService:Create(obj, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					BackgroundColor3 = accentColor
+				}):Play()
 			end
-			
+
 		-- Dropdowns
 		elseif name == "Display" then
 			local parent = obj.Parent
@@ -1308,13 +1317,15 @@ function Tab:AddToggle(name, options)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = frame
 	
-	-- Contenedor del Switch (Pill)
+	-- Contenedor del Switch (Pill). El atributo "On" es la fuente de verdad
+	-- del estado para UpdateTheme (comparar colores fallaba mid-animación).
 	local switch = Instance.new("TextButton")
 	switch.Name = "Switch"
 	switch.Size = udim2FromOffset(36, 20)
 	switch.Position = UDim2.new(1, -48, 0.5, -10)
 	switch.BackgroundColor3 = state and NebulaUI.Theme.ToggleOn or NebulaUI.Theme.ToggleOff
 	switch.Text = ""
+	switch:SetAttribute("On", state)
 	switch.Parent = frame
 	
 	local switchCorner = Instance.new("UICorner")
@@ -1336,6 +1347,7 @@ function Tab:AddToggle(name, options)
 	
 	local function updateToggle(newState)
 		state = newState
+		switch:SetAttribute("On", state)
 		if flag then
 			self.Window.Flags[flag] = state
 			self.Window:SaveConfig()
