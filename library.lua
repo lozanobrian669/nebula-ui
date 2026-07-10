@@ -593,12 +593,13 @@ function NebulaUI.CreateWindow(options)
 		end)
 	end
 
-	-- Título y subtítulo con alturas fijas para que el bloque quede
-	-- centrado verticalmente dentro del header de 50px sin desbordar
+	-- Título y subtítulo con alturas fijas, calculadas para que el CENTRO del
+	-- bloque de texto coincida exacto con el centro del avatar (y=25 en el
+	-- header de 50px): desktop 10..40, mobile 11..39.
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(0.6, -textLeftOffset, 0, isMobile and 16 or 18)
-	title.Position = UDim2.new(0, textLeftOffset, 0, isMobile and 10 or 9)
+	title.Size = UDim2.new(0.6, -textLeftOffset, 0, isMobile and 15 or 16)
+	title.Position = UDim2.new(0, textLeftOffset, 0, isMobile and 11 or 10)
 	title.BackgroundTransparency = 1
 	title.Font = Enum.Font.GothamBold
 	title.Text = titleText
@@ -610,8 +611,8 @@ function NebulaUI.CreateWindow(options)
 
 	local subtitle = Instance.new("TextLabel")
 	subtitle.Name = "Subtitle"
-	subtitle.Size = UDim2.new(0.6, -textLeftOffset, 0, isMobile and 11 or 12)
-	subtitle.Position = UDim2.new(0, textLeftOffset, 0, isMobile and 27 or 28)
+	subtitle.Size = UDim2.new(0.6, -textLeftOffset, 0, isMobile and 12 or 13)
+	subtitle.Position = UDim2.new(0, textLeftOffset, 0, 27)
 	subtitle.BackgroundTransparency = 1
 	subtitle.Font = Enum.Font.GothamSemibold
 	subtitle.Text = subTitleText
@@ -889,16 +890,18 @@ function Window:UpdateTheme(accentColor)
 			obj.BackgroundColor3 = accentColor
 			
 		-- Pestañas en el Sidebar: la activa tinta texto, fondo accent-soft y
-		-- barra izquierda con el accent. El chequeo "no es MutedText" sigue
-		-- siendo la forma de detectar cuál es el tab activo, sin estado nuevo.
+		-- barra izquierda con el accent. La barra se recolorea en TODOS los
+		-- tabs (no solo el activo) para que ninguno guarde el accent viejo
+		-- al activarse después. El chequeo "no es MutedText" sigue siendo la
+		-- forma de detectar cuál es el tab activo, sin estado nuevo.
 		elseif obj:IsA("TextButton") and obj.Parent and obj.Parent.Name == "Sidebar" then
+			local bar = obj:FindFirstChild("ActiveBar")
+			if bar then
+				bar.BackgroundColor3 = accentColor
+			end
 			if obj.TextColor3 ~= NebulaUI.Theme.MutedText then
 				obj.TextColor3 = accentColor
 				obj.BackgroundColor3 = accentColor
-				local bar = obj:FindFirstChild("ActiveBar")
-				if bar and bar.BackgroundTransparency < 1 then
-					bar.BackgroundColor3 = accentColor
-				end
 			end
 
 		-- ScrollingFrames
@@ -1047,6 +1050,9 @@ function Window:AddTab(title)
 		btn.TextColor3 = NebulaUI.Theme.Accent
 		btn.BackgroundColor3 = NebulaUI.Theme.Accent
 		btn.BackgroundTransparency = 0.84 -- accent-soft del mockup (16% alpha)
+		-- Refrescar el color de la barra al activar: si el accent cambió
+		-- mientras este tab estaba inactivo, la barra guardaba el color viejo
+		activeBar.BackgroundColor3 = NebulaUI.Theme.Accent
 		activeBar.BackgroundTransparency = 0
 	end
 
@@ -1417,6 +1423,33 @@ function Tab:AddButton(name, options)
 		descLabel.TextWrapped = true
 		descLabel.Parent = frame
 	end
+
+	-- Hover: el secundario se enciende con el color de acento (pedido para
+	-- "Join Discord"); el primario aclara levemente con transparencia
+	button.MouseEnter:Connect(function()
+		if secondary then
+			button.TextColor3 = Color3.fromRGB(255, 255, 255)
+			TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = NebulaUI.Theme.Accent
+			}):Play()
+		else
+			TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 0.15
+			}):Play()
+		end
+	end)
+	button.MouseLeave:Connect(function()
+		if secondary then
+			button.TextColor3 = NebulaUI.Theme.Text
+			TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = NebulaUI.Theme.ElementBackground
+			}):Play()
+		else
+			TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 0
+			}):Play()
+		end
+	end)
 
 	-- Efecto de presionado: parpadeo sutil de transparencia
 	button.MouseButton1Click:Connect(function()
