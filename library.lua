@@ -534,11 +534,15 @@ function NebulaUI.CreateWindow(options)
 	headerCorner.CornerRadius = UDim.new(0, 12)
 	headerCorner.Parent = header
 	
+	-- Parche que cuadra las esquinas inferiores del UICorner del header.
+	-- Debe pintarse con el MISMO color del header: con Background (fondo de
+	-- la ventana) el header se veía 10px más corto y el avatar "sobresalía"
+	-- del borde falso (invisible con la paleta vieja, ambos casi negros).
 	local headerHide = Instance.new("Frame")
 	headerHide.Name = "HeaderHide"
 	headerHide.Size = UDim2.new(1, 0, 0, 10)
 	headerHide.Position = UDim2.new(0, 0, 1, -10)
-	headerHide.BackgroundColor3 = NebulaUI.Theme.Background
+	headerHide.BackgroundColor3 = NebulaUI.Theme.HeaderBackground
 	headerHide.BorderSizePixel = 0
 	headerHide.Parent = header
 	
