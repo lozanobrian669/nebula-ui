@@ -1,28 +1,28 @@
 local NebulaUI = {
 	Windows = {},
 	Theme = {
-		Background = Color3.fromRGB(8, 9, 13),
-		SidebarBackground = Color3.fromRGB(12, 13, 18),
-		HeaderBackground = Color3.fromRGB(16, 17, 24),
+		Background = Color3.fromRGB(14, 16, 21),
+		SidebarBackground = Color3.fromRGB(18, 20, 26),
+		HeaderBackground = Color3.fromRGB(23, 26, 33),
 		HeaderGradientStart = Color3.fromRGB(28, 18, 48),
-		HeaderGradientEnd = Color3.fromRGB(12, 13, 18),
-		
+		HeaderGradientEnd = Color3.fromRGB(18, 20, 26),
+
 		Accent = Color3.fromRGB(155, 93, 229), -- Violeta principal
 		SecondaryAccent = Color3.fromRGB(0, 245, 212), -- Cyan neón secundario
-		Text = Color3.fromRGB(245, 245, 245),
-		MutedText = Color3.fromRGB(150, 150, 150),
+		Text = Color3.fromRGB(242, 243, 245),
+		MutedText = Color3.fromRGB(139, 142, 152),
 		DarkAccent = Color3.fromRGB(30, 22, 45), -- Tinte morado suave para pestaña activa
-		
-		CardBackground = Color3.fromRGB(18, 19, 24),
-		CardBorder = Color3.fromRGB(30, 31, 38),
-		CardBorderHover = Color3.fromRGB(155, 93, 229),
-		
-		ToggleOn = Color3.fromRGB(155, 93, 229),
-		ToggleOff = Color3.fromRGB(53, 54, 74),
 
-		ElementBackground = Color3.fromRGB(20, 21, 26),
-		InputBackground = Color3.fromRGB(24, 25, 32),
-		SliderTrack = Color3.fromRGB(35, 36, 45)
+		CardBackground = Color3.fromRGB(26, 29, 36),
+		CardBorder = Color3.fromRGB(42, 46, 55),
+		CardBorderHover = Color3.fromRGB(58, 63, 74), -- Gris sutil (ya no usa el accent)
+
+		ToggleOn = Color3.fromRGB(155, 93, 229),
+		ToggleOff = Color3.fromRGB(58, 63, 74),
+
+		ElementBackground = Color3.fromRGB(32, 36, 44),
+		InputBackground = Color3.fromRGB(36, 40, 49),
+		SliderTrack = Color3.fromRGB(42, 46, 55)
 	}
 }
 NebulaUI.__index = NebulaUI
@@ -31,54 +31,57 @@ NebulaUI.__index = NebulaUI
 -- Se aplican con Window:ApplyPreset(nombre o tabla) sin afectar el color de acento.
 -- Accent es el acento recomendado para cada preset: ApplyPreset NO lo aplica;
 -- queda a disposición del script (ej: pasarlo al SetValue de un ColorPicker).
+-- Superficies alineadas a la paleta del mockup v2: cada preset conserva su
+-- tinte pero con el mismo aclarado que el Nebula por defecto, para que elegir
+-- "Nebula" en el dropdown devuelva exactamente el look default.
 NebulaUI.Presets = {
 	Nebula = {
 		Accent = Color3.fromRGB(155, 93, 229),
-		Background = Color3.fromRGB(8, 9, 13),
-		SidebarBackground = Color3.fromRGB(12, 13, 18),
-		HeaderBackground = Color3.fromRGB(16, 17, 24),
-		CardBackground = Color3.fromRGB(18, 19, 24),
-		CardBorder = Color3.fromRGB(30, 31, 38),
-		ElementBackground = Color3.fromRGB(20, 21, 26),
-		InputBackground = Color3.fromRGB(24, 25, 32),
-		SliderTrack = Color3.fromRGB(35, 36, 45),
-		ToggleOff = Color3.fromRGB(53, 54, 74)
+		Background = Color3.fromRGB(14, 16, 21),
+		SidebarBackground = Color3.fromRGB(18, 20, 26),
+		HeaderBackground = Color3.fromRGB(23, 26, 33),
+		CardBackground = Color3.fromRGB(26, 29, 36),
+		CardBorder = Color3.fromRGB(42, 46, 55),
+		ElementBackground = Color3.fromRGB(32, 36, 44),
+		InputBackground = Color3.fromRGB(36, 40, 49),
+		SliderTrack = Color3.fromRGB(42, 46, 55),
+		ToggleOff = Color3.fromRGB(58, 63, 74)
 	},
 	Midnight = {
 		Accent = Color3.fromRGB(88, 148, 255),
-		Background = Color3.fromRGB(7, 10, 19),
-		SidebarBackground = Color3.fromRGB(11, 15, 27),
-		HeaderBackground = Color3.fromRGB(14, 19, 33),
-		CardBackground = Color3.fromRGB(17, 22, 38),
-		CardBorder = Color3.fromRGB(30, 38, 60),
-		ElementBackground = Color3.fromRGB(19, 25, 42),
-		InputBackground = Color3.fromRGB(23, 30, 50),
-		SliderTrack = Color3.fromRGB(34, 43, 68),
-		ToggleOff = Color3.fromRGB(48, 58, 92)
+		Background = Color3.fromRGB(13, 17, 27),
+		SidebarBackground = Color3.fromRGB(17, 22, 35),
+		HeaderBackground = Color3.fromRGB(21, 28, 42),
+		CardBackground = Color3.fromRGB(25, 32, 50),
+		CardBorder = Color3.fromRGB(42, 53, 77),
+		ElementBackground = Color3.fromRGB(31, 40, 60),
+		InputBackground = Color3.fromRGB(35, 44, 65),
+		SliderTrack = Color3.fromRGB(42, 53, 77),
+		ToggleOff = Color3.fromRGB(53, 64, 95)
 	},
 	Carbon = {
 		Accent = Color3.fromRGB(0, 198, 255),
-		Background = Color3.fromRGB(10, 10, 11),
-		SidebarBackground = Color3.fromRGB(14, 14, 16),
-		HeaderBackground = Color3.fromRGB(18, 18, 20),
-		CardBackground = Color3.fromRGB(21, 21, 24),
-		CardBorder = Color3.fromRGB(34, 34, 38),
-		ElementBackground = Color3.fromRGB(23, 23, 26),
-		InputBackground = Color3.fromRGB(27, 27, 31),
-		SliderTrack = Color3.fromRGB(39, 39, 45),
-		ToggleOff = Color3.fromRGB(58, 58, 66)
+		Background = Color3.fromRGB(16, 16, 19),
+		SidebarBackground = Color3.fromRGB(20, 21, 24),
+		HeaderBackground = Color3.fromRGB(25, 26, 29),
+		CardBackground = Color3.fromRGB(28, 30, 34),
+		CardBorder = Color3.fromRGB(46, 48, 53),
+		ElementBackground = Color3.fromRGB(34, 36, 41),
+		InputBackground = Color3.fromRGB(38, 40, 46),
+		SliderTrack = Color3.fromRGB(46, 48, 53),
+		ToggleOff = Color3.fromRGB(63, 66, 74)
 	},
 	Abyss = {
 		Accent = Color3.fromRGB(0, 226, 178),
-		Background = Color3.fromRGB(5, 12, 11),
-		SidebarBackground = Color3.fromRGB(8, 17, 16),
-		HeaderBackground = Color3.fromRGB(11, 22, 20),
-		CardBackground = Color3.fromRGB(14, 26, 24),
-		CardBorder = Color3.fromRGB(26, 44, 41),
-		ElementBackground = Color3.fromRGB(16, 28, 26),
-		InputBackground = Color3.fromRGB(19, 33, 30),
-		SliderTrack = Color3.fromRGB(30, 50, 46),
-		ToggleOff = Color3.fromRGB(42, 68, 63)
+		Background = Color3.fromRGB(11, 19, 18),
+		SidebarBackground = Color3.fromRGB(14, 24, 23),
+		HeaderBackground = Color3.fromRGB(18, 31, 29),
+		CardBackground = Color3.fromRGB(22, 36, 33),
+		CardBorder = Color3.fromRGB(38, 59, 55),
+		ElementBackground = Color3.fromRGB(28, 43, 40),
+		InputBackground = Color3.fromRGB(31, 48, 44),
+		SliderTrack = Color3.fromRGB(38, 59, 55),
+		ToggleOff = Color3.fromRGB(47, 73, 68)
 	}
 }
 
@@ -195,9 +198,9 @@ local function getWindowSize()
 	local viewportSize = camera and camera.ViewportSize or Vector2.new(1000, 800)
 	local isMobile = UserInputService.TouchEnabled and (viewportSize.X < 800 or viewportSize.Y < 600)
 	
-	local width = isMobile and 360 or 450
-	local height = isMobile and 225 or 285
-	local sidebarWidth = isMobile and 95 or 120
+	local width = isMobile and 360 or 520
+	local height = isMobile and 225 or 330
+	local sidebarWidth = isMobile and 95 or 122
 	
 	return width, height, sidebarWidth, isMobile
 end
@@ -810,13 +813,10 @@ function Window:UpdateTheme(accentColor)
 	if not self.ScreenGui then return end
 	
 	NebulaUI.Theme.Accent = accentColor
-	NebulaUI.Theme.CardBorderHover = accentColor
 	NebulaUI.Theme.ToggleOn = accentColor
-	
-	local h, s, v = Color3.toHSV(accentColor)
-	local darkAccent = Color3.fromHSV(h, s, mathClamp(v * 0.25, 0.1, 0.3))
-	local selectionAccent = Color3.fromHSV(h, s, mathClamp(v * 0.18, 0.08, 0.22))
-	
+	-- CardBorderHover ya no se pisa con el accent: el hover de tarjetas es
+	-- un gris sutil fijo (estilo mockup)
+
 	-- Actualizar botón flotante (Toggle) y subtítulo del Header
 	pcall(function()
 		local toggle = self.ScreenGui:FindFirstChild("Toggle")
@@ -875,9 +875,9 @@ function Window:UpdateTheme(accentColor)
 		elseif obj:IsA("TextButton") and obj.Parent and obj.Parent.Name == "ListFrame" then
 			if obj.TextColor3 ~= NebulaUI.Theme.MutedText then
 				obj.TextColor3 = accentColor
-				obj.BackgroundColor3 = selectionAccent
+				obj.BackgroundColor3 = accentColor
 			end
-			
+
 		-- Keybinds
 		elseif name == "BindBtn" then
 			if obj.TextColor3 ~= NebulaUI.Theme.SecondaryAccent then
@@ -888,11 +888,9 @@ function Window:UpdateTheme(accentColor)
 		elseif name == "Button" and obj:IsA("TextButton") then
 			obj.BackgroundColor3 = accentColor
 			
-		-- Pestañas en el Sidebar
-		-- CAMBIO REDISEÑO: el tab activo ahora also tinta su fondo y su barra
-		-- izquierda con el accent (antes solo cambiaba TextColor3). El chequeo
-		-- "no es MutedText" sigue siendo la forma de detectar cuál es el tab
-		-- activo, sin agregar estado nuevo.
+		-- Pestañas en el Sidebar: la activa tinta texto, fondo accent-soft y
+		-- barra izquierda con el accent. El chequeo "no es MutedText" sigue
+		-- siendo la forma de detectar cuál es el tab activo, sin estado nuevo.
 		elseif obj:IsA("TextButton") and obj.Parent and obj.Parent.Name == "Sidebar" then
 			if obj.TextColor3 ~= NebulaUI.Theme.MutedText then
 				obj.TextColor3 = accentColor
@@ -902,17 +900,10 @@ function Window:UpdateTheme(accentColor)
 					bar.BackgroundColor3 = accentColor
 				end
 			end
-			
+
 		-- ScrollingFrames
 		elseif obj:IsA("ScrollingFrame") then
 			obj.ScrollBarImageColor3 = accentColor
-			
-		-- Separadores / Títulos
-		elseif name == "TextLabel" then
-			local parent = obj.Parent
-			if parent and parent.Name:find("Separator_") then
-				obj.TextColor3 = accentColor
-			end
 		end
 	end
 end
@@ -969,28 +960,28 @@ function Window:AddTab(title)
 	
 	local isMobile = self.IsMobile
 	
-	-- CAMBIO REDISEÑO: botón de pestaña estilo pill. Se saca el UIStroke fijo
-	-- (el mockup no lleva borde en los tabs, solo tinte de fondo) y se sube
-	-- levemente el radio de esquina para que se sienta más "pill".
+	-- Botón de pestaña estilo pill: transparente y sin borde (estilo mockup);
+	-- la activa pinta fondo "accent-soft" (accent con transparencia) + barra
+	-- de acento a la izquierda.
 	local btn = Instance.new("TextButton")
 	btn.Name = title
 	btn.Size = UDim2.new(0.9, 0, 0, isMobile and 28 or 32)
 	btn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
-	btn.BackgroundTransparency = 1 -- CAMBIO: inactivo por defecto es transparente, no un bloque sólido
+	btn.BackgroundTransparency = 1 -- inactivo por defecto es transparente, no un bloque sólido
 	btn.BorderSizePixel = 0
 	btn.Font = Enum.Font.GothamBold -- CAMBIO: GothamBold en vez de GothamMedium, más parecido al peso del mockup
 	btn.Text = title
 	btn.TextColor3 = NebulaUI.Theme.MutedText
 	btn.TextSize = isMobile and 11 or 12
 	btn.Parent = self.Sidebar
-	
+
 	local btnCorner = Instance.new("UICorner")
 	btnCorner.CornerRadius = UDim.new(0, 7)
 	btnCorner.Parent = btn
-	
-	-- CAMBIO REDISEÑO: barra de acento a la izquierda, visible solo cuando
-	-- el tab está activo (replica el ::before del mockup). Vive dentro del
-	-- botón, así no hay que trackear posiciones absolutas en el ScrollingFrame.
+
+	-- Barra de acento a la izquierda, visible solo cuando el tab está activo.
+	-- Vive dentro del botón, así no hay que trackear posiciones absolutas
+	-- en el ScrollingFrame.
 	local activeBar = Instance.new("Frame")
 	activeBar.Name = "ActiveBar"
 	activeBar.AnchorPoint = Vector2.new(0, 0.5)
@@ -1004,7 +995,7 @@ function Window:AddTab(title)
 	local activeBarCorner = Instance.new("UICorner")
 	activeBarCorner.CornerRadius = UDim.new(1, 0)
 	activeBarCorner.Parent = activeBar
-	
+
 	-- Contenedor deslizable de la pestaña
 	local contentFrame = Instance.new("ScrollingFrame")
 	contentFrame.Name = title .. "_Content"
@@ -1050,35 +1041,37 @@ function Window:AddTab(title)
 				bar.BackgroundTransparency = 1
 			end
 		end
-		
+
 		tabObj.Active = true
 		contentFrame.Visible = true
 		btn.TextColor3 = NebulaUI.Theme.Accent
 		btn.BackgroundColor3 = NebulaUI.Theme.Accent
-		btn.BackgroundTransparency = 0.88
+		btn.BackgroundTransparency = 0.84 -- accent-soft del mockup (16% alpha)
 		activeBar.BackgroundTransparency = 0
 	end
-	
+
 	btn.MouseButton1Click:Connect(selectTab)
-	
-	-- CAMBIO REDISEÑO: hover sutil en tabs inactivos, mismo criterio que
-	-- createBase usa para cards (no interfiere con el tab activo)
+
+	-- Hover en tabs inactivos: velo sutil de fondo + texto aclarado
+	-- (no interfiere con el tab activo)
 	btn.MouseEnter:Connect(function()
 		if not tabObj.Active then
+			btn.TextColor3 = NebulaUI.Theme.Text
+			btn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
 			TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				BackgroundTransparency = 0.9,
 			}):Play()
-			btn.BackgroundColor3 = NebulaUI.Theme.ElementBackground
 		end
 	end)
 	btn.MouseLeave:Connect(function()
 		if not tabObj.Active then
+			btn.TextColor3 = NebulaUI.Theme.MutedText
 			TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				BackgroundTransparency = 1,
 			}):Play()
 		end
 	end)
-	
+
 	table.insert(self.Tabs, tabObj)
 	
 	-- Seleccionar la primera pestaña por defecto
@@ -1130,7 +1123,7 @@ function Tab:AddSlider(name, options)
 	valueLabel.Size = UDim2.new(0.25, 0, 0, isMobile and 16 or 20)
 	valueLabel.Position = UDim2.new(0.7, -10, 0, isMobile and 4 or 6)
 	valueLabel.BackgroundTransparency = 1
-	valueLabel.Font = Enum.Font.GothamBold
+	valueLabel.Font = Enum.Font.Code -- monospace, como JetBrains Mono en el mockup
 	valueLabel.Text = tostring(currentValue)
 	valueLabel.TextColor3 = NebulaUI.Theme.Accent
 	valueLabel.TextSize = isMobile and 11 or 12
@@ -1313,12 +1306,7 @@ function Tab:AddToggle(name, options)
 	local switchCorner = Instance.new("UICorner")
 	switchCorner.CornerRadius = UDim.new(1, 0)
 	switchCorner.Parent = switch
-	
-	local switchStroke = Instance.new("UIStroke")
-	switchStroke.Color = NebulaUI.Theme.CardBorder
-	switchStroke.Thickness = 1
-	switchStroke.Parent = switch
-	
+
 	-- Knob circular
 	local knob = Instance.new("Frame")
 	knob.Name = "Knob"
@@ -1368,53 +1356,57 @@ function Tab:AddToggle(name, options)
 	}
 end
 
--- Agregar un botón simple a la pestaña
+-- Agregar un botón a la pestaña (estilo mockup: botón de ancho completo con
+-- el nombre como texto y la descripción debajo, sin tarjeta contenedora).
+-- options.Secondary = true usa fondo neutro (ElementBackground) en vez del accent.
 function Tab:AddButton(name, options)
 	options = options or {}
 	local callback = options.Callback or function() end
 	local description = options.Description or ""
-	
+	local secondary = options.Secondary == true
+
 	local isMobile = self.Window.IsMobile
 	local hasDesc = description ~= ""
-	local minHeight = hasDesc and (isMobile and 46 or 52) or (isMobile and 38 or 44)
+	local btnHeight = isMobile and 26 or 30
 
-	local frame = createBase(self, name, minHeight)
+	-- Contenedor transparente: el protagonista es el botón
+	self.LayoutOrderCounter = (self.LayoutOrderCounter or 0) + 1
+	local frame = Instance.new("Frame")
+	frame.Name = name .. "_Container"
+	frame.Size = UDim2.new(0.95, 0, 0, btnHeight)
+	frame.AutomaticSize = Enum.AutomaticSize.Y
+	frame.LayoutOrder = self.LayoutOrderCounter
+	frame.BackgroundTransparency = 1
+	frame.Parent = self.ContentFrame
 
-	-- Texto en contenedor con altura automática: termina antes del botón
-	-- (sin solaparse) y la tarjeta crece si la descripción ocupa varias líneas
-	local textHolder = Instance.new("Frame")
-	textHolder.Name = "TextHolder"
-	textHolder.AnchorPoint = Vector2.new(0, 0.5)
-	textHolder.Position = UDim2.new(0, 12, 0.5, 0)
-	textHolder.Size = UDim2.new(0.7, -32, 0, 0)
-	textHolder.AutomaticSize = Enum.AutomaticSize.Y
-	textHolder.BackgroundTransparency = 1
-	textHolder.Parent = frame
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = frame
 
-	local textLayout = Instance.new("UIListLayout")
-	textLayout.Padding = UDim.new(0, 2)
-	textLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	textLayout.Parent = textHolder
+	-- "SecondaryButton" a propósito: UpdateTheme recolorea con el accent solo
+	-- los TextButton llamados "Button"
+	local button = Instance.new("TextButton")
+	button.Name = secondary and "SecondaryButton" or "Button"
+	button.LayoutOrder = 1
+	button.Size = UDim2.new(1, 0, 0, btnHeight)
+	button.BackgroundColor3 = secondary and NebulaUI.Theme.ElementBackground or NebulaUI.Theme.Accent
+	button.AutoButtonColor = false
+	button.Font = Enum.Font.GothamBold
+	button.Text = name
+	button.TextColor3 = secondary and NebulaUI.Theme.Text or Color3.fromRGB(255, 255, 255)
+	button.TextSize = isMobile and 10 or 11
+	button.Parent = frame
 
-	local label = Instance.new("TextLabel")
-	label.Name = "Label"
-	label.LayoutOrder = 1
-	label.Size = UDim2.new(1, 0, 0, 0)
-	label.AutomaticSize = Enum.AutomaticSize.Y
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamMedium
-	label.Text = name
-	label.TextColor3 = NebulaUI.Theme.Text
-	label.TextSize = isMobile and 11 or 12
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.TextWrapped = true
-	label.Parent = textHolder
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 7)
+	btnCorner.Parent = button
 
 	if hasDesc then
 		local descLabel = Instance.new("TextLabel")
 		descLabel.Name = "Description"
 		descLabel.LayoutOrder = 2
-		descLabel.Size = UDim2.new(1, 0, 0, 0)
+		descLabel.Size = UDim2.new(1, -4, 0, 0)
 		descLabel.AutomaticSize = Enum.AutomaticSize.Y
 		descLabel.BackgroundTransparency = 1
 		descLabel.Font = Enum.Font.Gotham
@@ -1423,49 +1415,26 @@ function Tab:AddButton(name, options)
 		descLabel.TextSize = isMobile and 9 or 10
 		descLabel.TextXAlignment = Enum.TextXAlignment.Left
 		descLabel.TextWrapped = true
-		descLabel.Parent = textHolder
+		descLabel.Parent = frame
 	end
 
-	-- Crecer en altura para mostrar todo el texto
-	textLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		local contentHeight = textLayout.AbsoluteContentSize.Y + (isMobile and 16 or 20)
-		frame.Size = UDim2.new(0.95, 0, 0, math.max(minHeight, contentHeight))
-	end)
-
-	local button = Instance.new("TextButton")
-	button.Name = "Button"
-	button.Size = UDim2.new(0.3, 0, 0, isMobile and 24 or 28)
-	button.Position = UDim2.new(0.7, -12, 0.5, isMobile and -12 or -14)
-	button.BackgroundColor3 = NebulaUI.Theme.Accent
-	button.Font = Enum.Font.GothamBold
-	button.Text = "Click"
-	button.TextColor3 = NebulaUI.Theme.Text
-	button.TextSize = isMobile and 10 or 11
-	button.Parent = frame
-	
-	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(0, 6)
-	btnCorner.Parent = button
-	
-	-- Animaciones al hacer click (Efecto Ripple / Presionado)
+	-- Efecto de presionado: parpadeo sutil de transparencia
 	button.MouseButton1Click:Connect(function()
-		local pressTween = TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Size = UDim2.new(0.28, 0, 0, isMobile and 22 or 26),
-			Position = UDim2.new(0.71, -12, 0.5, isMobile and -11 or -13)
+		local pressTween = TweenService:Create(button, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundTransparency = 0.35
 		})
 		pressTween:Play()
 		pressTween.Completed:Connect(function()
 			TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(0.3, 0, 0, isMobile and 24 or 28),
-				Position = UDim2.new(0.7, -12, 0.5, isMobile and -12 or -14)
+				BackgroundTransparency = 0
 			}):Play()
 		end)
-		
+
 		pcall(callback)
 	end)
-	
+
 	NebulaTask.spawn(function() self:_UpdateCanvas() end)
-	
+
 	return {
 		Fire = function()
 			pcall(callback)
@@ -1686,23 +1655,38 @@ function Tab:AddDropdown(name, options)
 		tableClear(optionButtons)
 		
 		for idx, item in ipairs(items) do
+			-- Opciones transparentes; la seleccionada lleva fondo accent-soft
+			-- (accent con transparencia) + texto accent, como en el mockup
+			local isSelected = (item == selectedValue)
 			local opt = Instance.new("TextButton")
 			opt.Name = item
 			opt.Size = UDim2.new(1, 0, 0, isMobile and 24 or 28)
-			opt.BackgroundColor3 = (item == selectedValue) and Color3.fromRGB(35, 22, 45) or NebulaUI.Theme.InputBackground
+			opt.BackgroundColor3 = NebulaUI.Theme.Accent
+			opt.BackgroundTransparency = isSelected and 0.84 or 1
 			opt.BorderSizePixel = 0
 			opt.Font = Enum.Font.GothamMedium
 			opt.Text = "  " .. item
-			opt.TextColor3 = (item == selectedValue) and NebulaUI.Theme.Accent or NebulaUI.Theme.MutedText
+			opt.TextColor3 = isSelected and NebulaUI.Theme.Accent or NebulaUI.Theme.MutedText
 			opt.TextSize = isMobile and 10 or 11
 			opt.TextXAlignment = Enum.TextXAlignment.Left
 			opt.LayoutOrder = idx
 			opt.Parent = listFrame
-			
+
 			local optCorner = Instance.new("UICorner")
-			optCorner.CornerRadius = UDim.new(0, 4)
+			optCorner.CornerRadius = UDim.new(0, 6)
 			optCorner.Parent = opt
-			
+
+			opt.MouseEnter:Connect(function()
+				if opt.Name ~= selectedValue then
+					opt.TextColor3 = NebulaUI.Theme.Text
+				end
+			end)
+			opt.MouseLeave:Connect(function()
+				if opt.Name ~= selectedValue then
+					opt.TextColor3 = NebulaUI.Theme.MutedText
+				end
+			end)
+
 			opt.MouseButton1Click:Connect(function()
 				selectedValue = item
 				display.Text = item
@@ -1715,9 +1699,10 @@ function Tab:AddDropdown(name, options)
 				-- Actualizar colores de las opciones
 				for _, otherOpt in ipairs(listFrame:GetChildren()) do
 					if otherOpt:IsA("TextButton") then
-						local isSelected = (otherOpt.Name == selectedValue)
-						otherOpt.BackgroundColor3 = isSelected and Color3.fromRGB(35, 22, 45) or NebulaUI.Theme.InputBackground
-						otherOpt.TextColor3 = isSelected and NebulaUI.Theme.Accent or NebulaUI.Theme.MutedText
+						local nowSelected = (otherOpt.Name == selectedValue)
+						otherOpt.BackgroundColor3 = NebulaUI.Theme.Accent
+						otherOpt.BackgroundTransparency = nowSelected and 0.84 or 1
+						otherOpt.TextColor3 = nowSelected and NebulaUI.Theme.Accent or NebulaUI.Theme.MutedText
 					end
 				end
 				
@@ -1904,15 +1889,17 @@ function Tab:AddSeparator(name)
 	frame.BackgroundTransparency = 1
 	frame.Parent = self.ContentFrame
 	
+	-- Estilo .section-label del mockup: uppercase, muted, alineado a la izquierda
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Name = "TextLabel"
-	textLabel.Size = UDim2.new(1, 0, 1, 0)
+	textLabel.Size = UDim2.new(1, -4, 1, 0)
+	textLabel.Position = UDim2.new(0, 4, 0, 0)
 	textLabel.BackgroundTransparency = 1
 	textLabel.Font = Enum.Font.GothamBold
 	textLabel.Text = string.upper(name)
-	textLabel.TextColor3 = NebulaUI.Theme.Accent
-	textLabel.TextSize = isMobile and 10 or 11
-	textLabel.TextXAlignment = Enum.TextXAlignment.Center
+	textLabel.TextColor3 = NebulaUI.Theme.MutedText
+	textLabel.TextSize = isMobile and 9 or 10
+	textLabel.TextXAlignment = Enum.TextXAlignment.Left
 	textLabel.Parent = frame
 	
 	NebulaTask.spawn(function() self:_UpdateCanvas() end)
@@ -2086,7 +2073,7 @@ function Tab:AddColorPicker(name, options)
 	hexLabel.Size = UDim2.new(0, 60, 1, 0)
 	hexLabel.Position = UDim2.new(1, -114, 0, 0)
 	hexLabel.BackgroundTransparency = 1
-	hexLabel.Font = Enum.Font.GothamSemibold
+	hexLabel.Font = Enum.Font.Code -- monospace, como el mockup
 	hexLabel.Text = toHex(colorValue)
 	hexLabel.TextColor3 = NebulaUI.Theme.MutedText
 	hexLabel.TextSize = isMobile and 9 or 10
