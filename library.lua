@@ -314,8 +314,10 @@ function NebulaUI.CreateWindow(options)
 	local offsetMultiplier = #NebulaUI.Windows % 6
 	toggleBtn.Position = UDim2.new(0, 15 + (offsetMultiplier * 15), 0.5, 40 + (offsetMultiplier * 10))
 	-- Restaurar la posición guardada del botón flotante (flag interno del config).
-	-- Solo se aplica si sigue cayendo dentro del viewport actual: si cambió la
-	-- resolución y quedaría fuera de pantalla, se usa la posición por defecto.
+	-- La posición se CLAMPEA al viewport en vez de descartarse: antes, si el
+	-- chequeo de límites fallaba (botón cerca de un borde, cambio de resolución
+	-- o viewport aún no listo al inyectar), se volvía silenciosamente a la
+	-- posición default y parecía que la persistencia no funcionaba.
 	do
 		local savedTogglePos = self.Flags["_TogglePosition"]
 		if type(savedTogglePos) == "table" and #savedTogglePos == 4 then
@@ -325,9 +327,14 @@ function NebulaUI.CreateWindow(options)
 			if ok and restored then
 				local camera = workspace.CurrentCamera
 				local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
-				local absX = restored.X.Scale * viewport.X + restored.X.Offset
-				local absY = restored.Y.Scale * viewport.Y + restored.Y.Offset
-				if absX >= 0 and absX <= viewport.X - 46 and absY >= 0 and absY <= viewport.Y - 46 then
+				if viewport.X > 100 and viewport.Y > 100 then
+					local absX = restored.X.Scale * viewport.X + restored.X.Offset
+					local absY = restored.Y.Scale * viewport.Y + restored.Y.Offset
+					absX = mathClamp(absX, 0, math.max(viewport.X - 46, 0))
+					absY = mathClamp(absY, 0, math.max(viewport.Y - 46, 0))
+					toggleBtn.Position = udim2FromOffset(absX, absY)
+				else
+					-- Viewport degenerado (inyección muy temprana): aplicar tal cual
 					toggleBtn.Position = restored
 				end
 			end
@@ -461,7 +468,22 @@ function NebulaUI.CreateWindow(options)
 			dragInput = input
 		end
 	end)
-	
+
+	-- Red de seguridad del guardado de posición: algunos executors no
+	-- disparan InputObject.Changed → UserInputState.End de forma confiable
+	-- con input virtual, y ahí el guardado del drag-end de arriba nunca
+	-- corría. UserInputService.InputEnded sí llega siempre (es el mismo
+	-- camino que usan los sliders, que persisten bien). El guard
+	-- draggingToggle evita el doble guardado si ambos eventos llegan.
+	UserInputService.InputEnded:Connect(function(input)
+		if draggingToggle and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+			draggingToggle = false
+			local pos = toggleBtn.Position
+			self.Flags["_TogglePosition"] = { pos.X.Scale, pos.X.Offset, pos.Y.Scale, pos.Y.Offset }
+			self:SaveConfig()
+		end
+	end)
+
 	UserInputService.InputChanged:Connect(function(input)
 		if input == dragInput then
 			if dragging then
