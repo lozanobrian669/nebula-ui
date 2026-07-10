@@ -756,9 +756,13 @@ function Window:Destroy()
 	end
 end
 
--- Guardar configuración en la carpeta del executor
-function Window:SaveConfig()
-	if not self.ConfigSaving or not self.ConfigSaving.Enabled then return end
+-- Guardar configuración en la carpeta del executor.
+-- force = true saltea el chequeo de Enabled: lo usa el guardado MANUAL
+-- (botón "Guardar Configuración") para poder escribir aunque el
+-- auto-guardado esté apagado. Sin force, respeta ConfigSaving.Enabled.
+function Window:SaveConfig(force)
+	if not self.ConfigSaving then return end
+	if not self.ConfigSaving.Enabled and not force then return end
 	local folder = self.ConfigSaving.Folder or "NebulaUI"
 	local file = self.ConfigSaving.FileName or "config"
 	
