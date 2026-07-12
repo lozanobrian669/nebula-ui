@@ -251,6 +251,98 @@ function Tab:_UpdateCanvas()
 	end
 end
 
+-- ============ Animación de entrada del contenido al cambiar de tab ============
+-- Fade escalonado ("lazy loading") por transparencia: no toca Size/Position,
+-- así el UIListLayout no se re-acomoda durante la animación. Solo se animan
+-- los primeros elementos (los que caben en pantalla); el resto aparece al
+-- instante para que tabs largas no se sientan lentas.
+local STAGGER_MAX_ELEMENTS = 10
+local STAGGER_DELAY = 0.04
+local STAGGER_DURATION = 0.2
+
+-- Junta las propiedades de transparencia visibles de un elemento y sus
+-- descendientes, con su valor original para poder restaurarlo
+local function collectFadeProps(root)
+	local props = {}
+	local function scan(inst)
+		if inst:IsA("GuiObject") and inst.BackgroundTransparency < 1 then
+			table.insert(props, { inst, "BackgroundTransparency", inst.BackgroundTransparency })
+		end
+		if (inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox")) and inst.TextTransparency < 1 then
+			table.insert(props, { inst, "TextTransparency", inst.TextTransparency })
+		end
+		if (inst:IsA("ImageLabel") or inst:IsA("ImageButton")) and inst.ImageTransparency < 1 then
+			table.insert(props, { inst, "ImageTransparency", inst.ImageTransparency })
+		end
+		if inst:IsA("UIStroke") and inst.Transparency < 1 then
+			table.insert(props, { inst, "Transparency", inst.Transparency })
+		end
+	end
+	scan(root)
+	for _, desc in ipairs(root:GetDescendants()) do
+		scan(desc)
+	end
+	return props
+end
+
+-- Cancela la animación de entrada en curso y restaura los valores originales,
+-- para que un cambio rápido de tab no capture elementos a mitad de fade
+function Window:_ResetTabAnimation()
+	if self._TabTweens then
+		for _, tween in ipairs(self._TabTweens) do
+			tween:Cancel()
+		end
+	end
+	if self._TabFadeProps then
+		for _, entry in ipairs(self._TabFadeProps) do
+			local inst, prop, original = entry[1], entry[2], entry[3]
+			if inst.Parent then
+				inst[prop] = original
+			end
+		end
+	end
+	self._TabTweens = nil
+	self._TabFadeProps = nil
+end
+
+function Window:_AnimateTabContent(tab)
+	self:_ResetTabAnimation()
+
+	local containers = {}
+	for _, child in ipairs(tab.ContentFrame:GetChildren()) do
+		if child:IsA("GuiObject") then
+			table.insert(containers, child)
+		end
+	end
+	table.sort(containers, function(a, b)
+		return a.LayoutOrder < b.LayoutOrder
+	end)
+
+	local tweens = {}
+	local fadeProps = {}
+	for i, container in ipairs(containers) do
+		if i > STAGGER_MAX_ELEMENTS then
+			break
+		end
+		local info = TweenInfo.new(
+			STAGGER_DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out,
+			0, false, (i - 1) * STAGGER_DELAY
+		)
+		for _, entry in ipairs(collectFadeProps(container)) do
+			local inst, prop, original = entry[1], entry[2], entry[3]
+			inst[prop] = 1
+			table.insert(fadeProps, entry)
+			table.insert(tweens, TweenService:Create(inst, info, { [prop] = original }))
+		end
+	end
+
+	self._TabFadeProps = fadeProps
+	self._TabTweens = tweens
+	for _, tween in ipairs(tweens) do
+		tween:Play()
+	end
+end
+
 -- Crear la ventana principal de la interfaz
 function NebulaUI.CreateWindow(options)
 	options = options or {}
@@ -373,8 +465,11 @@ function NebulaUI.CreateWindow(options)
 	local mainFrame = Instance.new("Frame")
 	mainFrame.Name = "MainFrame"
 	mainFrame.Size = udim2FromOffset(width, height)
+	-- AnchorPoint centrado: el UIScale escala alrededor del anchor, así el
+	-- pop de apertura/cierre crece y se contrae desde el centro del panel
+	mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 	-- Desplazamiento de ventanas para soporte multi-ventana limpio
-	mainFrame.Position = UDim2.new(0.5, -(width/2) + (offsetMultiplier * 20), 0.5, -(height/2) + (offsetMultiplier * 20))
+	mainFrame.Position = UDim2.new(0.5, offsetMultiplier * 20, 0.5, offsetMultiplier * 20)
 	mainFrame.BackgroundColor3 = NebulaUI.Theme.Background
 	mainFrame.BorderSizePixel = 0
 	mainFrame.Visible = true
@@ -420,11 +515,12 @@ function NebulaUI.CreateWindow(options)
 				TweenService:Create(mainStroke, fadeInfo, { Transparency = 0 })
 			}
 		else
-			local popInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			-- Cierre solo con escala: fundir el fondo acá se ve mal porque los
+			-- hijos (texto, cards) no se funden y quedan "flotando" sobre un
+			-- panel translúcido que se encoge
+			local popInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 			menuTweens = {
-				TweenService:Create(mainScale, popInfo, { Scale = 0.85 }),
-				TweenService:Create(mainFrame, popInfo, { BackgroundTransparency = 0.4 }),
-				TweenService:Create(mainStroke, popInfo, { Transparency = 1 })
+				TweenService:Create(mainScale, popInfo, { Scale = 0.85 })
 			}
 			menuTweens[1].Completed:Connect(function(state)
 				if state == Enum.PlaybackState.Completed then
@@ -1128,6 +1224,11 @@ function Window:AddTab(title)
 	-- (BackgroundTransparency alto = efecto "accent-soft" del mockup) y
 	-- muestra/oculta la barra izquierda, en vez de solo cambiar TextColor3.
 	local function selectTab()
+		-- Re-clickear el tab activo no debe relanzar la animación de entrada
+		if tabObj.Active then
+			return
+		end
+
 		for _, otherTab in ipairs(self.Tabs) do
 			otherTab.Active = false
 			otherTab.ContentFrame.Visible = false
@@ -1148,6 +1249,8 @@ function Window:AddTab(title)
 		-- mientras este tab estaba inactivo, la barra guardaba el color viejo
 		activeBar.BackgroundColor3 = NebulaUI.Theme.Accent
 		activeBar.BackgroundTransparency = 0
+
+		self:_AnimateTabContent(tabObj)
 	end
 
 	btn.MouseButton1Click:Connect(selectTab)
