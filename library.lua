@@ -389,7 +389,59 @@ function NebulaUI.CreateWindow(options)
 	mainStroke.Color = NebulaUI.Theme.CardBorder
 	mainStroke.Thickness = 1.5
 	mainStroke.Parent = mainFrame
-	
+
+	-- Escala para la animación de apertura/cierre: escalar con UIScale no
+	-- dispara re-layouts internos ni interfiere con el arrastre por Position
+	local mainScale = Instance.new("UIScale")
+	mainScale.Scale = 1
+	mainScale.Parent = mainFrame
+
+	-- Animación de apertura/cierre del menú: pop de escala + fade en paralelo
+	-- del fondo y el borde (los hijos "aparecen" con el pop sin necesitar CanvasGroup)
+	local menuTweens = {}
+
+	local function animateMenu(open)
+		for _, tween in ipairs(menuTweens) do
+			tween:Cancel()
+		end
+		table.clear(menuTweens)
+
+		if open then
+			mainScale.Scale = 0.85
+			mainFrame.BackgroundTransparency = 0.4
+			mainStroke.Transparency = 1
+			mainFrame.Visible = true
+
+			local popInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+			local fadeInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			menuTweens = {
+				TweenService:Create(mainScale, popInfo, { Scale = 1 }),
+				TweenService:Create(mainFrame, fadeInfo, { BackgroundTransparency = 0 }),
+				TweenService:Create(mainStroke, fadeInfo, { Transparency = 0 })
+			}
+		else
+			local popInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			menuTweens = {
+				TweenService:Create(mainScale, popInfo, { Scale = 0.85 }),
+				TweenService:Create(mainFrame, popInfo, { BackgroundTransparency = 0.4 }),
+				TweenService:Create(mainStroke, popInfo, { Transparency = 1 })
+			}
+			menuTweens[1].Completed:Connect(function(state)
+				if state == Enum.PlaybackState.Completed then
+					mainFrame.Visible = false
+					-- Restaurar valores para que nada quede semitransparente
+					mainScale.Scale = 1
+					mainFrame.BackgroundTransparency = 0
+					mainStroke.Transparency = 0
+				end
+			end)
+		end
+
+		for _, tween in ipairs(menuTweens) do
+			tween:Play()
+		end
+	end
+
 	-- Sistema para arrastrar la ventana
 	local dragging = false
 	local dragInput, dragStart, startPos
@@ -517,8 +569,8 @@ function NebulaUI.CreateWindow(options)
 			}):Play()
 		end)
 		
-		mainFrame.Visible = isOpen
-		
+		animateMenu(isOpen)
+
 		if isOpen then
 			toggleIcon.Image = nebulaIcon
 			toggleIcon.ImageColor3 = NebulaUI.Theme.Accent
@@ -662,7 +714,7 @@ function NebulaUI.CreateWindow(options)
 	
 	minBtn.MouseButton1Click:Connect(function()
 		isOpen = false
-		mainFrame.Visible = false
+		animateMenu(false)
 		toggleIcon.Image = nebulaIcon
 		toggleIcon.ImageColor3 = NebulaUI.Theme.MutedText
 		toggleStroke.Color = NebulaUI.Theme.CardBorder
@@ -751,7 +803,10 @@ function NebulaUI.CreateWindow(options)
 	self.Container = container
 	
 	table.insert(NebulaUI.Windows, self)
-	
+
+	-- Primera aparición del menú con la misma animación de apertura
+	animateMenu(true)
+
 	return self
 end
 
