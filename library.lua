@@ -248,11 +248,26 @@ local function createBase(tab, name, height, interactive)
 	return frame
 end
 
+-- Escala actual del UIScale del panel. Las medidas Absolute* (AbsoluteContentSize,
+-- AbsoluteSize, TextBounds) vienen en píxeles YA multiplicados por esta escala,
+-- pero CanvasSize y los offsets son unidades locales que el UIScale vuelve a
+-- multiplicar al renderizar: toda medida absoluta debe dividirse por esta
+-- escala antes de usarse como offset, o el resultado queda doble-escalado
+-- (canvas corto a escala < 1, espacio muerto a escala > 1).
+local function getWindowScale(window)
+	local scaleObj = window and window._MainScale
+	local s = scaleObj and scaleObj.Scale or 1
+	if s <= 0 then
+		return 1
+	end
+	return s
+end
+
 -- Actualizar tamaño del canvas al agregar componentes
 function Tab:_UpdateCanvas()
 	local layoutEl = self.ContentFrame:FindFirstChildOfClass("UIListLayout")
 	if layoutEl then
-		self.ContentFrame.CanvasSize = UDim2.new(0, 0, 0, layoutEl.AbsoluteContentSize.Y + 25)
+		self.ContentFrame.CanvasSize = UDim2.new(0, 0, 0, layoutEl.AbsoluteContentSize.Y / getWindowScale(self.Window) + 25)
 	end
 end
 
@@ -928,7 +943,9 @@ function NebulaUI.CreateWindow(options)
 	sidebarPadding.Parent = sidebar
 
 	local function updateSidebarScroll()
-		sidebar.CanvasSize = UDim2.new(0, 0, 0, sidebarLayout.AbsoluteContentSize.Y + 16)
+		-- La comparación de ScrollingEnabled es absoluto vs absoluto, inmune a
+		-- la escala; solo el CanvasSize necesita pasarse a unidades locales
+		sidebar.CanvasSize = UDim2.new(0, 0, 0, sidebarLayout.AbsoluteContentSize.Y / getWindowScale(self) + 16)
 		sidebar.ScrollingEnabled = sidebarLayout.AbsoluteContentSize.Y > sidebar.AbsoluteSize.Y
 	end
 	sidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSidebarScroll)
@@ -2042,10 +2059,16 @@ function Tab:AddDropdown(name, options)
 		end
 		
 		local contentSize = listLayout.AbsoluteContentSize.Y
-		listFrame.CanvasSize = UDim2.new(0, 0, 0, contentSize)
+		listFrame.CanvasSize = UDim2.new(0, 0, 0, contentSize / getWindowScale(self.Window))
 	end
-	
+
 	populateItems()
+
+	-- Recalcular el canvas de la lista si cambia la escala de la ventana
+	-- (el cambio de UIScale dispara este mismo evento)
+	listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		listFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y / getWindowScale(self.Window))
+	end)
 	
 	-- Handler de apertura/cierre
 	trigger.MouseButton1Click:Connect(function()
@@ -2726,7 +2749,7 @@ function Tab:AddCard(name, options)
 	accentCorner.Parent = accentBar
 
 	frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-		accentBar.Size = udim2FromOffset(3, math.max(frame.AbsoluteSize.Y - 20, 12))
+		accentBar.Size = udim2FromOffset(3, math.max(frame.AbsoluteSize.Y / getWindowScale(self.Window) - 20, 12))
 	end)
 
 	-- Ícono en cuadro redondeado a la izquierda
@@ -2819,7 +2842,7 @@ function Tab:AddCard(name, options)
 
 	-- Crecer en altura para mostrar todo el texto sin truncar
 	textLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		local contentHeight = textLayout.AbsoluteContentSize.Y + (isMobile and 18 or 22)
+		local contentHeight = textLayout.AbsoluteContentSize.Y / getWindowScale(self.Window) + (isMobile and 18 or 22)
 		frame.Size = UDim2.new(0.95, 0, 0, math.max(minHeight, contentHeight))
 	end)
 
