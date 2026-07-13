@@ -192,6 +192,11 @@ function NebulaUI:DestroyAll()
 	tableClear(NebulaUI.Windows)
 end
 
+-- Límites y paso del factor de escala de la interfaz (Window:SetUIScale)
+local UI_SCALE_MIN = 0.6
+local UI_SCALE_MAX = 1.3
+local UI_SCALE_STEP = 0.1
+
 -- Obtener tamaño dinámico según el dispositivo para soporte responsive
 local function getWindowSize()
 	local camera = workspace.CurrentCamera
@@ -359,7 +364,16 @@ function NebulaUI.CreateWindow(options)
 	pcall(function()
 		self:LoadConfig()
 	end)
-	
+
+	-- Restaurar el factor de escala de la interfaz (flag interno: viaja en el
+	-- mismo config.json que el resto, igual que _TogglePosition)
+	local savedScale = self.Flags["_UIScale"]
+	if type(savedScale) == "number" and savedScale == savedScale then
+		self._BaseScale = mathClamp(savedScale, UI_SCALE_MIN, UI_SCALE_MAX)
+	else
+		self._BaseScale = 1
+	end
+
 	local width, height, sidebarWidth, isMobile = getWindowSize()
 	self.IsMobile = isMobile
 	
@@ -485,11 +499,14 @@ function NebulaUI.CreateWindow(options)
 	mainStroke.Thickness = 1.5
 	mainStroke.Parent = mainFrame
 
-	-- Escala para la animación de apertura/cierre: escalar con UIScale no
-	-- dispara re-layouts internos ni interfiere con el arrastre por Position
+	-- UIScale único del panel: sostiene el factor de escala del usuario
+	-- (_BaseScale) y la animación de apertura/cierre, que es RELATIVA a ese
+	-- factor para que nunca se pisen. Escalar con UIScale no dispara
+	-- re-layouts internos ni interfiere con el arrastre por Position
 	local mainScale = Instance.new("UIScale")
-	mainScale.Scale = 1
+	mainScale.Scale = self._BaseScale
 	mainScale.Parent = mainFrame
+	self._MainScale = mainScale
 
 	-- Animación de apertura/cierre del menú: pop de escala + fade en paralelo
 	-- del fondo y el borde (los hijos "aparecen" con el pop sin necesitar CanvasGroup)
@@ -502,7 +519,7 @@ function NebulaUI.CreateWindow(options)
 		table.clear(menuTweens)
 
 		if open then
-			mainScale.Scale = 0.85
+			mainScale.Scale = self._BaseScale * 0.85
 			mainFrame.BackgroundTransparency = 0.4
 			mainStroke.Transparency = 1
 			mainFrame.Visible = true
@@ -510,7 +527,7 @@ function NebulaUI.CreateWindow(options)
 			local popInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 			local fadeInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 			menuTweens = {
-				TweenService:Create(mainScale, popInfo, { Scale = 1 }),
+				TweenService:Create(mainScale, popInfo, { Scale = self._BaseScale }),
 				TweenService:Create(mainFrame, fadeInfo, { BackgroundTransparency = 0 }),
 				TweenService:Create(mainStroke, fadeInfo, { Transparency = 0 })
 			}
@@ -520,13 +537,13 @@ function NebulaUI.CreateWindow(options)
 			-- panel translúcido que se encoge
 			local popInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 			menuTweens = {
-				TweenService:Create(mainScale, popInfo, { Scale = 0.85 })
+				TweenService:Create(mainScale, popInfo, { Scale = self._BaseScale * 0.85 })
 			}
 			menuTweens[1].Completed:Connect(function(state)
 				if state == Enum.PlaybackState.Completed then
 					mainFrame.Visible = false
 					-- Restaurar valores para que nada quede semitransparente
-					mainScale.Scale = 1
+					mainScale.Scale = self._BaseScale
 					mainFrame.BackgroundTransparency = 0
 					mainStroke.Transparency = 0
 				end
@@ -823,6 +840,40 @@ function NebulaUI.CreateWindow(options)
 		TweenService:Create(minBtn, TweenInfo.new(0.2), {TextColor3 = NebulaUI.Theme.MutedText}):Play()
 	end)
 
+	-- Botones de escala de la interfaz (modo compacto/ampliado, p. ej. para
+	-- que el menú no tape el gameplay al grabar en formato vertical).
+	-- Hover violeta (accent) para diferenciarlos del minimizar, que hoverea rojo.
+	local function createScaleButton(name, text, xOffset)
+		local btn = Instance.new("TextButton")
+		btn.Name = name
+		btn.Size = udim2FromOffset(30, 36)
+		btn.Position = UDim2.new(1, xOffset, 0.5, -18)
+		btn.BackgroundTransparency = 1
+		btn.TextColor3 = NebulaUI.Theme.MutedText
+		btn.Font = Enum.Font.GothamBold
+		btn.Text = text
+		btn.TextSize = 16
+		btn.Parent = header
+
+		btn.MouseEnter:Connect(function()
+			TweenService:Create(btn, TweenInfo.new(0.2), { TextColor3 = NebulaUI.Theme.Accent }):Play()
+		end)
+		btn.MouseLeave:Connect(function()
+			TweenService:Create(btn, TweenInfo.new(0.2), { TextColor3 = NebulaUI.Theme.MutedText }):Play()
+		end)
+		return btn
+	end
+
+	local scaleUpBtn = createScaleButton("ScaleUp", "+", -92)
+	local scaleDownBtn = createScaleButton("ScaleDown", "−", -122)
+
+	scaleUpBtn.MouseButton1Click:Connect(function()
+		self:SetUIScale(self:GetUIScale() + UI_SCALE_STEP)
+	end)
+	scaleDownBtn.MouseButton1Click:Connect(function()
+		self:SetUIScale(self:GetUIScale() - UI_SCALE_STEP)
+	end)
+
 	-- 5. Barra Lateral (Sidebar) para Pestañas
 	-- Fondo separado: los hijos no heredan el UICorner del MainFrame, así que
 	-- se redondea la esquina inferior izquierda y se cuadran arriba y derecha
@@ -914,6 +965,36 @@ end
 
 function Window:GetToggleLocked()
 	return self.ToggleLocked == true
+end
+
+-- Factor de escala de toda la interfaz (clampeado entre 0.6 y 1.3).
+-- Persiste en el config como flag interno _UIScale, igual que _TogglePosition.
+function Window:SetUIScale(scale)
+	if type(scale) ~= "number" or scale ~= scale then
+		return
+	end
+	scale = mathClamp(scale, UI_SCALE_MIN, UI_SCALE_MAX)
+	scale = math.floor(scale * 100 + 0.5) / 100 -- sin drift flotante al sumar pasos de 0.1
+	self._BaseScale = scale
+
+	if self._ScaleTween then
+		self._ScaleTween:Cancel()
+	end
+	if self._MainScale then
+		self._ScaleTween = TweenService:Create(
+			self._MainScale,
+			TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ Scale = scale }
+		)
+		self._ScaleTween:Play()
+	end
+
+	self.Flags["_UIScale"] = scale
+	self:SaveConfig()
+end
+
+function Window:GetUIScale()
+	return self._BaseScale or 1
 end
 
 -- Eliminar esta ventana de la GUI
