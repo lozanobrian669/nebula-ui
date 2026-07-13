@@ -193,7 +193,7 @@ function NebulaUI:DestroyAll()
 end
 
 -- Límites y paso del factor de escala de la interfaz (Window:SetUIScale)
-local UI_SCALE_MIN = 0.6
+local UI_SCALE_MIN = 0.5
 local UI_SCALE_MAX = 1.3
 local UI_SCALE_STEP = 0.1
 
