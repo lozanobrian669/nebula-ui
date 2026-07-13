@@ -821,8 +821,10 @@ function NebulaUI.CreateWindow(options)
 	minBtn.BackgroundTransparency = 1
 	minBtn.TextColor3 = NebulaUI.Theme.MutedText
 	minBtn.Font = Enum.Font.GothamBold
-	minBtn.Text = "−" -- signo menos: queda centrado verticalmente (el "_" renderiza abajo)
-	minBtn.TextSize = 22
+	-- "×" (signo de multiplicación, centrado verticalmente) en vez de "−":
+	-- con los botones de escala −/+ en el header, dos signos menos confundían
+	minBtn.Text = "×"
+	minBtn.TextSize = 20
 	minBtn.Parent = header
 	
 	minBtn.MouseButton1Click:Connect(function()
@@ -843,6 +845,8 @@ function NebulaUI.CreateWindow(options)
 	-- Botones de escala de la interfaz (modo compacto/ampliado, p. ej. para
 	-- que el menú no tape el gameplay al grabar en formato vertical).
 	-- Hover violeta (accent) para diferenciarlos del minimizar, que hoverea rojo.
+	-- Posicionados dejando libre el hueco -80..-48, donde touchline inyecta
+	-- su botón de pin (Minimize en -46 + gap + pin de 32px).
 	local function createScaleButton(name, text, xOffset)
 		local btn = Instance.new("TextButton")
 		btn.Name = name
@@ -864,8 +868,8 @@ function NebulaUI.CreateWindow(options)
 		return btn
 	end
 
-	local scaleUpBtn = createScaleButton("ScaleUp", "+", -92)
-	local scaleDownBtn = createScaleButton("ScaleDown", "−", -122)
+	local scaleUpBtn = createScaleButton("ScaleUp", "+", -118)
+	local scaleDownBtn = createScaleButton("ScaleDown", "−", -148)
 
 	scaleUpBtn.MouseButton1Click:Connect(function()
 		self:SetUIScale(self:GetUIScale() + UI_SCALE_STEP)
