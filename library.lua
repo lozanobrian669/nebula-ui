@@ -203,9 +203,9 @@ local function getWindowSize()
 	local viewportSize = camera and camera.ViewportSize or Vector2.new(1000, 800)
 	local isMobile = UserInputService.TouchEnabled and (viewportSize.X < 800 or viewportSize.Y < 600)
 	
-	local width = isMobile and 360 or 520
+	local width = isMobile and 420 or 580
 	local height = isMobile and 225 or 330
-	local sidebarWidth = isMobile and 95 or 122
+	local sidebarWidth = isMobile and 132 or 158
 	
 	return width, height, sidebarWidth, isMobile
 end
